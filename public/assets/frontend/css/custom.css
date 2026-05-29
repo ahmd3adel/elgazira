@@ -1,0 +1,405 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: #F5F9FF;
+            color: #1A2C3E;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Header slim & clean */
+        .light-header {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 40, 60, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+
+        .logo-light h2 {
+            font-size: 1.65rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #166C9E, #0F5580);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin: 0;
+            letter-spacing: -0.3px;
+        }
+
+        .logo-light span {
+            font-size: 0.7rem;
+            color: #5C7F9C;
+            font-weight: 500;
+        }
+
+        .nav-link-custom {
+            font-weight: 600;
+            color: #2C4C6C;
+            transition: all 0.2s;
+            border-radius: 40px;
+            padding: 6px 16px;
+            font-size: 0.95rem;
+        }
+
+        .nav-link-custom:hover {
+            background: #E9F2F9;
+            color: #0A5C9E;
+        }
+
+        .btn-outline-light-nav {
+            border: 1px solid #C9DAE8;
+            background: white;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-outline-light-nav:hover {
+            background: #0A5C9E;
+            border-color: #0A5C9E;
+            color: white;
+        }
+
+        .btn-primary-sm {
+            background: #0A5C9E;
+            color: white;
+            border: none;
+            padding: 6px 22px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 6px rgba(10, 92, 158, 0.2);
+            transition: 0.2s;
+        }
+
+        .btn-primary-sm:hover {
+            background: #084b82;
+            transform: translateY(-1px);
+        }
+
+        /* Hero simplified */
+        .hero-section {
+            padding: 40px 0 30px;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(130deg, #0F4C6E, #1D7EA0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .hero-sub {
+            font-size: 1rem;
+            color: #4A6F8C;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .btn-build-profile {
+            background: linear-gradient(95deg, #0F5C8C, #1387B5);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-top: 24px;
+            box-shadow: 0 8px 20px -8px rgba(10, 92, 158, 0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-build-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px -10px #0a5c9e70;
+        }
+
+        /* Search card minimal & modern */
+        .search-card {
+            background: white;
+            border-radius: 32px;
+            border: 1px solid #E5EDF5;
+            box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.05);
+            margin: 20px 0 35px;
+            transition: box-shadow 0.2s;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 60px;
+            padding: 10px 18px;
+            border: 1px solid #E2EAF2;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95rem;
+            background-color: #FEFEFE;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0A5C9E;
+            box-shadow: 0 0 0 3px rgba(10, 92, 158, 0.2);
+        }
+
+        .btn-search-primary {
+            background: #0C3A53;
+            border-radius: 60px;
+            padding: 10px 18px;
+            font-weight: 700;
+            transition: all 0.2s;
+            width: 100%;
+            border: none;
+        }
+
+        .btn-search-primary:hover {
+            background: #0A5C9E;
+            transform: translateY(-1px);
+        }
+
+        /* category pills - better touch */
+        .category-pill {
+            background: white;
+            border: 1px solid #E0EAF2;
+            padding: 6px 22px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #2F5575;
+        }
+
+        .category-pill i {
+            font-size: 0.85rem;
+        }
+
+        .category-pill:hover {
+            background: #EFF6FD;
+            border-color: #A0C2DB;
+            transform: translateY(-2px);
+        }
+
+        .category-pill.active-category {
+            background: #0A5C9E;
+            color: white;
+            border-color: #0A5C9E;
+            box-shadow: 0 4px 12px rgba(10, 92, 158, 0.25);
+        }
+
+        /* expert cards - clean & professional */
+        .expert-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.4rem;
+            transition: all 0.25s ease;
+            border: 1px solid #ECF3F9;
+            height: 100%;
+            animation: fadeInScale 0.35s ease;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .expert-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.1);
+            border-color: #CDE2F2;
+        }
+
+        .verified-badge {
+            background: #EFF7FF;
+            color: #0F5C8C;
+            border-radius: 60px;
+            padding: 4px 14px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: fit-content;
+        }
+
+        .expert-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 12px 0 6px;
+            line-height: 1.3;
+        }
+
+        .contact-btn-card {
+            width: 100%;
+            background: #F5F9FE;
+            border: 1px solid #E3EDF6;
+            border-radius: 60px;
+            padding: 9px;
+            font-weight: 700;
+            transition: 0.2s;
+            margin-top: 18px;
+            color: #1E577A;
+        }
+
+        .contact-btn-card:hover {
+            background: #0A5C9E;
+            color: white;
+            border-color: #0A5C9E;
+        }
+
+        /* floating toast */
+        .floating-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1E2F3C;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 60px;
+            font-weight: 500;
+            z-index: 1200;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem;
+            animation: slideUp 0.25s ease;
+            white-space: nowrap;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        footer {
+            background: #0A2638;
+            color: #B9D0E3;
+            margin-top: 50px;
+            padding: 28px 0;
+            font-size: 0.8rem;
+        }
+
+        /* Mobile first adjustments */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+
+            .hero-sub {
+                font-size: 0.9rem;
+                padding: 0 10px;
+            }
+
+            .search-card {
+                margin: 10px 0 30px;
+                padding: 1.25rem !important;
+            }
+
+            .category-pill {
+                padding: 5px 16px;
+                font-size: 0.75rem;
+            }
+
+            .expert-card {
+                padding: 1.1rem;
+            }
+
+            .expert-name {
+                font-size: 1.1rem;
+            }
+
+            .light-header .container {
+                padding: 8px 12px;
+            }
+
+            .btn-build-profile {
+                padding: 10px 24px;
+                font-size: 0.9rem;
+            }
+
+            .floating-toast {
+                white-space: normal;
+                text-align: center;
+                max-width: 85%;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* very small screens */
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.6rem;
+            }
+
+            .category-pill {
+                padding: 4px 14px;
+                font-size: 0.7rem;
+            }
+
+            .btn-search-primary {
+                padding: 10px 12px;
+            }
+        }
+
+        /* Ripple effect */
+        .ripple-effect {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple-effect:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 15%, transparent 15%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10);
+            opacity: 0;
+            transition: transform 0.4s, opacity 0.5s;
+        }
+
+        .ripple-effect:active:after {
+            transform: scale(0);
+            opacity: 0.25;
+            transition: 0s;
+        }
+
+        /* seamless empty state */
+        .empty-state-icon {
+            opacity: 0.6;
+        }
