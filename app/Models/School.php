@@ -8,7 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class School extends Model
 {
     use HasFactory;
-    public function department() {
-    return $this->belongsTo(Department::class);
-}
+
+    protected $fillable = [
+        'name',
+        'type',
+        'department_id',
+        'address',
+    ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }

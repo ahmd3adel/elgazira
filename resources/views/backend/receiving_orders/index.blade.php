@@ -414,44 +414,47 @@
         @endif
 
         {{-- جدول الشحنات التفصيلي --}}
-        <div class="row">
-            <div class="col-12">
-                <div class="card card-info">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-list-alt ml-1"></i>
-                            قائمة الشحنات التفصيلية
-                        </h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#addReceivingOrderModal">
-                                <i class="fas fa-plus"></i> إضافة شحنة
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table id="receiving-orders-table" class="table table-bordered table-striped table-hover w-100">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px">#</th>
-                                        <th>رقم الإذن</th>
-                                        <th>رقم التشغيلة</th>
-                                        <th>المورد</th>
-                                        <th>المنتج</th>
-                                        <th>المخزن</th>
-                                        <th style="width: 100px">الكمية</th>
-                                        <th style="width: 100px">العينات</th>
-                                        <th style="width: 130px">العمليات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+       {{-- جدول الشحنات التفصيلي --}}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-info">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list-alt ml-1"></i>
+                    قائمة الشحنات التفصيلية
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#addReceivingOrderModal">
+                        <i class="fas fa-plus"></i> إضافة شحنة
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table id="receiving-orders-table" class="table table-bordered table-striped table-hover w-100">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px">#</th>
+                                                                <th style="width: 110px">تاريخ الوصول</th>  {{-- ✅ أضف هذا العمود --}}
+
+                                <th>رقم الإذن</th>
+                                <th>رقم التشغيلة</th>
+                                <th>المورد</th>
+                                <th>المنتج</th>
+                                <th>المخزن</th>
+                                <th style="width: 100px">الكمية</th>
+                                <th style="width: 100px">العينات</th>
+                                <th style="width: 130px">العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+    </div>
+</div>
     </div>
 
     {{-- المودالات --}}
@@ -665,46 +668,31 @@
                 });
             }
 
-            table = $('#receiving-orders-table').DataTable({
-                processing: true,
-                serverSide: true,
-                responsive: false,
-                scrollX: true,
-                autoWidth: false,
-                ajax: {
-                    url: "{{ route('admin.receiving_orders.index') }}",
-                    type: "GET"
-                },
-                columns: [
-                    { data: 'DT_RowIndex', name: 'id', orderable: false, searchable: false, className: 'text-center', width: '50px' },
-                    { data: 'document_number', name: 'document_number', className: 'text-center' },
-                    { data: 'batch_number', name: 'batch_number', className: 'text-center' },
-                    { data: 'supplier_name', name: 'supplier_name' },
-                    { data: 'product_name', name: 'product_name' },
-                    { data: 'warehouse_name', name: 'warehouse_name' },
-                    { data: 'quantity', name: 'quantity', className: 'text-center' },
-                    { data: 'samples_quantity', name: 'samples_quantity', className: 'text-center' },
-                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center', width: '130px' }
-                ],
-                language: {
-                    url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/ar.json",
-                    search: "بحث:",
-                    searchPlaceholder: "بحث...",
-                    lengthMenu: "عرض _MENU_ سجل",
-                    info: "عرض _START_ إلى _END_ من أصل _TOTAL_ سجل",
-                    infoEmpty: "لا توجد سجلات",
-                    zeroRecords: "لم يتم العثور على سجلات",
-                    paginate: {
-                        first: "الأول",
-                        last: "الأخير",
-                        next: "التالي",
-                        previous: "السابق"
-                    }
-                },
-                pageLength: 25,
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "الكل"]],
-                order: [[1, 'asc']]
-            });
+         table = $('#receiving-orders-table').DataTable({
+    processing: true,
+    serverSide: true,
+    responsive: false,
+    scrollX: true,
+    autoWidth: false,
+    ajax: {
+        url: "{{ route('admin.receiving_orders.index') }}",
+        type: "GET"
+    },
+    columns: [
+        { data: 'DT_RowIndex', name: 'id', orderable: false, searchable: false, className: 'text-center', width: '50px' },
+                { data: 'arrival_date', name: 'arrival_date', className: 'text-center' },  // ✅ أضف هذا العمود
+
+        { data: 'document_number', name: 'document_number', className: 'text-center' },
+        { data: 'batch_number', name: 'batch_number', className: 'text-center' },
+        { data: 'supplier_name', name: 'supplier_name' },
+        { data: 'product_name', name: 'product_name' },
+        { data: 'warehouse_name', name: 'warehouse_name' },
+        { data: 'quantity', name: 'quantity', className: 'text-center' },
+        { data: 'samples_quantity', name: 'samples_quantity', className: 'text-center' },
+        { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center', width: '130px' }
+    ],
+    // باقي الخيارات كما هي...
+});
             
             $('#addReceivingOrderModal, #editReceivingOrderModal').on('shown.bs.modal', function() { initSelect2(); });
             $('#addReceivingOrderModal').on('hidden.bs.modal', function() {

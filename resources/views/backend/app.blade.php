@@ -15,7 +15,7 @@
     @include('backend.layouts.partials.sidebar')
 </aside>
 
-<div class="content-wrapper">
+<div class="content-wrapper" style="min-height: calc(100vh - 120px); display: flex; flex-direction: column;">
     <!-- Content Header (Page header) -->
     <div class="content-header">
         <div class="container-fluid">
@@ -67,11 +67,13 @@
     </div>
     @endif
 
-    <!-- Main content -->
-    @yield('content')
+    <!-- Main content - ياخذ المساحة المتبقية -->
+    <section class="content" style="flex: 1;">
+        @yield('content')
+    </section>
 </div>
 
-<footer class="main-footer">
+<footer class="main-footer" style="position: relative; margin-top: 0; background: #fff; border-top: 1px solid #dee2e6;">
     <strong>Copyright &copy; 2014-2019 <a href="http://adminlte.io">AdminLTE.io</a>.</strong>
     All rights reserved.
     <div class="float-right d-none d-sm-inline-block">
@@ -99,7 +101,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{{ asset('assets/backend/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js')}}"></script>
 <script src="{{ asset('assets/backend/dist/js/adminlte.js')}}"></script>

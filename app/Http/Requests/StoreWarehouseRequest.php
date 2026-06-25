@@ -3,63 +3,39 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreWarehouseRequest extends FormRequest
 {
-    /**
-     * تحديد ما إذا كان المستخدم مصرح له بإجراء هذا الطلب.
-     */
-    public function authorize(): bool
+    public function authorize()
     {
-        return true; // اجعلها true لتفعيل الـ Validation
+        return true;
     }
 
-    /**
-     * قواعد التحقق من البيانات.
-     */
-    public function rules(): array
+    public function rules()
     {
         return [
-            'name'           => 'required|string|max:255',
-            
-            
-            // نوع المخزن يجب أن يكون واحداً من الثلاثة المتفق عليها
-            'type'           => 'in:main,sub,dispatch_point',
-            
-            /**
-             * المنطق الشرطي:
-             * 1. المحافظة مطلوبة فقط إذا كان نوع المخزن "رئيسي" (main)
-             */
+            'name' => 'required|string|max:255|unique:warehouses,name',
+            'code' => 'required|string|max:50|unique:warehouses,code',
+            'type' => 'required|in:main,sub,dispatch_point',
             'governorate_id' => 'required_if:type,main|nullable|exists:governorates,id',
-            
-            /**
-             * 2. المخزن الأب مطلوب إذا كان النوع "فرعي" (sub) أو "نقطة توزيع" (dispatch_point)
-             * أي: مطلوب طالما أن النوع "ليس" رئيسياً.
-             */
-            'parent_id'      => 'required_unless:type,main|nullable|exists:warehouses,id',
-            
-            // باقي الحقول اختيارية
-            'manager_name'   => 'nullable|string|max:255',
-            'manager_phone'  => 'nullable|string|max:20',
-            'address'        => 'nullable|string',
-            'status'         => 'required|boolean',
+            'parent_id' => 'required_if:type,sub,dispatch_point|nullable|exists:warehouses,id',
+            'manager_name' => 'nullable|string|max:255',
+            'manager_phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'status' => 'boolean',
         ];
     }
 
-    /**
-     * تخصيص رسائل الخطأ لتظهر بالعربية.
-     */
-    public function messages(): array
+    public function messages()
     {
         return [
-            'name.required'             => 'يرجى إدخال اسم المخزن.',
-            'code.required'             => 'كود المخزن حقل إلزامي.',
-            'code.unique'               => 'كود المخزن هذا مسجل مسبقاً، يرجى استخدام كود فريد.',
-            'type.required'             => 'يرجى تحديد نوع المخزن.',
-            'governorate_id.required_if' => 'المخزن الرئيسي يجب أن يتبع محافظة.',
-            'parent_id.required_unless'  => 'المخزن الفرعي أو نقطة التوزيع يجب ربطها بمخزن رئيسي.',
-            'governorate_id.exists'      => 'المحافظة المختارة غير موجودة.',
-            'parent_id.exists'           => 'المخزن الرئيسي المختار غير موجود.',
+            'name.required' => 'اسم المخزن مطلوب',
+            'name.unique' => 'اسم المخزن موجود بالفعل',
+            'code.required' => 'كود المخزن مطلوب',
+            'code.unique' => 'كود المخزن موجود بالفعل',
+            'governorate_id.required_if' => 'يرجى اختيار المحافظة للمخزن الرئيسي',
+            'parent_id.required_if' => 'يرجى اختيار المخزن الرئيسي للمخزن الفرعي',
         ];
     }
 }

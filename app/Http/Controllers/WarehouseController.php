@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Warehouse;
-use App\Http\Requests\StoreWarehouseRequest;
-use App\Http\Requests\UpdateWarehouseRequest;
 use App\Models\Governorate;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -17,79 +15,102 @@ class WarehouseController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Warehouse::with('governorate', 'parentMainWarehouse')->latest()->get();
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('governorate_name', function ($warehouse) {
-                    // إذا كان له محافظة مباشرة (رئيسي)
-                    if ($warehouse->governorate) {
-                        return $warehouse->governorate->name;
-                    }
-                    // إذا كان فرعي، نجلب محافظة الأب
-                    return $warehouse->parentMainWarehouse?->governorate?->name ?? 'غير محدد';
-                })
-                ->addColumn('parent_name', function ($row) {
-                    // إذا كان له أب، هات اسمه، وإلا ارجع نص فارغ
-                    return $row->parentMainWarehouse ? $row->parentMainWarehouse->name : '---';
-                })
-                ->addColumn('status', function ($row) {
-                    return $row->status
-                        ? '<span class="badge badge-success">نشط</span>'
-                        : '<span class="badge badge-danger">غير نشط</span>';
-                })
-
-                ->rawColumns(['status'])
-                ->make(true);
+            try {
+                $data = Warehouse::with(['governorate', 'parentMainWarehouse'])
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+                    
+                return DataTables::of($data)
+                    ->addIndexColumn()
+                    ->addColumn('governorate_name', function ($warehouse) {
+                        if ($warehouse->type === 'main') {
+                            return $warehouse->governorate?->name ?? 'غير محدد';
+                        }
+                        return $warehouse->parentMainWarehouse?->governorate?->name ?? 'غير محدد';
+                    })
+                    ->addColumn('parent_name', function ($row) {
+                        return $row->parentMainWarehouse ? $row->parentMainWarehouse->name : '---';
+                    })
+                    ->addColumn('products_count', function ($row) {
+                        return '<span class="badge badge-secondary">0 منتج</span>';
+                    })
+                    ->addColumn('status', function ($row) {
+                        return $row->status
+                            ? '<span class="badge badge-success">نشط</span>'
+                            : '<span class="badge badge-danger">غير نشط</span>';
+                    })
+                    ->addColumn('actions', function ($row) {
+                        return '
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-info btn-sm edit-warehouse" data-id="'.$row->id.'" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm delete-warehouse" 
+                                    data-id="'.$row->id.'" 
+                                    data-name="'.$row->name.'" 
+                                    title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        ';
+                    })
+                    ->rawColumns(['status', 'actions', 'products_count'])
+                    ->make(true);
+                    
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => true,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
         }
-        $governorates = Governorate::all();
+        
+        $governorates = Governorate::where('status', 1)->orderBy('name')->get();
         $mainWarehouses = Warehouse::where('type', 'main')
-            ->where('status', 1)  // يفضل جلب النشطة فقط
-            ->with('governorate')  // لتحسين الأداء وجلب اسم المحافظة
+            ->where('status', 1)
+            ->with('governorate')
+            ->orderBy('name')
             ->get();
+        
         return view('backend.warehouses.index', compact('governorates', 'mainWarehouses'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreWarehouseRequest $request)
+    public function store(Request $request)
     {
         try {
-            // 1. استلام البيانات المعتمدة من الـ Request
-            $data = $request->validated();
+            $validated = $request->validate([
+                'name' => 'required|string|max:255|unique:warehouses,name',
+                'code' => 'required|string|max:50|unique:warehouses,code',
+                'type' => 'required|in:main,sub,dispatch_point',
+                'governorate_id' => 'required_if:type,main|nullable|exists:governorates,id',
+                'parent_id' => 'required_if:type,sub,dispatch_point|nullable|exists:warehouses,id',
+                'manager_name' => 'nullable|string|max:255',
+                'manager_phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string',
+                'status' => 'boolean',
+            ]);
 
-            // 2. منطق التأكد من التبعية (Business Logic)
-            // إذا كان المخزن فرعياً أو نقطة توزيع، يجب تصفير المحافظة 
-            // لأننا سنعتمد على محافظة "الأب" برمجياً كما اتفقنا
-            if ($data['type'] !== 'main') {
-                $data['governorate_id'] = null;
+            if ($validated['type'] !== 'main') {
+                $validated['governorate_id'] = null;
             } else {
-                // أما إذا كان رئيسياً، فيجب تصفير الـ parent_id لضمان نظافة البيانات
-                $data['parent_id'] = null;
+                $validated['parent_id'] = null;
             }
 
-            // 3. إنشاء السجل في قاعدة البيانات
-            $warehouse = Warehouse::create($data);
+            $warehouse = Warehouse::create($validated);
 
-            // 4. الرد على الـ Ajax بسلسلة نجاح
             return response()->json([
                 'success' => true,
                 'message' => 'تم إضافة المخزن بنجاح',
-                'data'    => $warehouse
+                'data' => $warehouse
             ], 201);
+            
         } catch (\Exception $e) {
-            // في حالة حدوث أي خطأ غير متوقع
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ أثناء الحفظ: ' . $e->getMessage()
+                'message' => 'حدث خطأ: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -97,93 +118,284 @@ class WarehouseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Warehouse $warehouse)
+    public function show($id)
     {
-        //
+        if (request()->ajax()) {
+            try {
+                $warehouse = Warehouse::with(['governorate', 'parentMainWarehouse'])->findOrFail($id);
+                return response()->json([
+                    'success' => true,
+                    'data' => $warehouse
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'المخزن غير موجود'
+                ], 404);
+            }
+        }
+        
+        abort(404, 'Page not found');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Warehouse $warehouse)
+    public function edit($id)
     {
-        //
+        try {
+            $warehouse = Warehouse::with(['governorate', 'parentMainWarehouse'])->findOrFail($id);
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $warehouse
+                ]);
+            }
+            
+            $governorates = Governorate::where('status', 1)->orderBy('name')->get();
+            $mainWarehouses = Warehouse::where('type', 'main')
+                ->where('status', 1)
+                ->where('id', '!=', $id)
+                ->orderBy('name')
+                ->get();
+                
+            return view('backend.warehouses.edit', compact('warehouse', 'governorates', 'mainWarehouses'));
+            
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'المخزن غير موجود'
+                ], 404);
+            }
+            abort(404);
+        }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateWarehouseRequest $request, Warehouse $warehouse)
+    public function update(Request $request, $id)
     {
-        //
+        try {
+            $warehouse = Warehouse::findOrFail($id);
+            
+            $validated = $request->validate([
+                'name' => 'required|string|max:255|unique:warehouses,name,' . $id,
+                'code' => 'nullable|string|max:50|unique:warehouses,code,' . $id, // changed to nullable
+                'type' => 'required|in:main,sub,dispatch_point',
+                'governorate_id' => 'required_if:type,main|nullable|exists:governorates,id',
+                'parent_id' => 'required_if:type,sub,dispatch_point|nullable|exists:warehouses,id',
+                'manager_name' => 'nullable|string|max:255',
+                'manager_phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string',
+                'status' => 'boolean',
+            ]);
+
+            if ($validated['type'] !== 'main') {
+                $validated['governorate_id'] = null;
+            } else {
+                $validated['parent_id'] = null;
+            }
+
+            if (isset($validated['parent_id']) && $validated['parent_id'] == $id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا يمكن جعل المخزن أباً لنفسه'
+                ], 422);
+            }
+
+            $warehouse->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث المخزن بنجاح',
+                'data' => $warehouse
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+/**
+ * Remove the specified resource from storage.
+ */
 public function destroy(Warehouse $warehouse)
 {
     try {
-        // نفس التحقق من المخازن الفرعية...
-        $subWarehouses = Warehouse::where('parent_id', $warehouse->id)->count();
-        
-        if ($subWarehouses > 0) {
+        if (!$warehouse->canBeDeleted()) {
             return response()->json([
                 'success' => false,
-                'message' => "لا يمكن حذف هذا المخزن لأنه يحتوي على {$subWarehouses} مخازن فرعية."
+                'message' => $warehouse->getDeleteRestrictionMessage()
             ], 422);
         }
         
-        // Soft Delete (يضيف تاريخ في deleted_at)
         $warehouse->delete();
         
         return response()->json([
             'success' => true,
-            'message' => "تم حذف المخزن '{$warehouse->name}' بنجاح"
+            'message' => 'تم حذف المخزن بنجاح'
         ]);
         
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'message' => 'خطأ: ' . $e->getMessage()
+            'message' => 'حدث خطأ: ' . $e->getMessage()
         ], 500);
     }
 }
 
-// دالة لاستعادة المخزن المحذوف
-public function restore($id)
+/**
+ * Display a listing of trashed warehouses.
+ */
+public function trashed(Request $request)
 {
-    try {
-        $warehouse = Warehouse::withTrashed()->findOrFail($id);
-        $warehouse->restore();
-        
-        return response()->json([
-            'success' => true,
-            'message' => "تم استعادة المخزن '{$warehouse->name}' بنجاح"
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'خطأ: ' . $e->getMessage()
-        ], 500);
+    // تأكد من أن هذا الـ route يعمل لطلبات AJAX
+    if ($request->ajax()) {
+        try {
+            // جلب المخازن المحذوفة فقط
+            $warehouses = Warehouse::onlyTrashed()
+                ->select('id', 'code', 'name', 'type', 'deleted_at')
+                ->orderBy('deleted_at', 'desc')
+                ->get();
+            
+            $types = [
+                'main' => 'رئيسي',
+                'sub' => 'فرعي',
+                'dispatch_point' => 'نقطة توزيع'
+            ];
+            
+            $data = [];
+            foreach ($warehouses as $index => $warehouse) {
+                $data[] = [
+                    'id' => $warehouse->id,
+                    'DT_RowIndex' => $index + 1,
+                    'code' => $warehouse->code ?? '-',
+                    'name' => $warehouse->name,
+                    'type_label' => $types[$warehouse->type] ?? $warehouse->type,
+                    'deleted_date' => $warehouse->deleted_at ? $warehouse->deleted_at->format('Y-m-d H:i:s') : '-'
+                ];
+            }
+            
+            return response()->json([
+                'data' => $data
+            ]);
+                
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
+    
+    // إذا لم يكن AJAX، ارجع خطأ
+    return response()->json(['error' => 'Invalid request'], 400);
 }
 
-// دالة للحذف النهائي
-public function forceDelete($id)
+    /**
+     * Restore soft deleted warehouses.
+     */
+    public function restore(Request $request)
+    {
+        try {
+            $ids = $request->ids;
+            
+            if (empty($ids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'الرجاء تحديد المخازن المراد استعادتها'
+                ], 422);
+            }
+            
+            $restored = Warehouse::onlyTrashed()
+                ->whereIn('id', $ids)
+                ->restore();
+                
+            return response()->json([
+                'success' => true,
+                'message' => "تم استعادة {$restored} مخزن/مخازن بنجاح"
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+ /**
+ * Force delete warehouses permanently.
+ */
+public function forceDelete(Request $request)
 {
     try {
-        $warehouse = Warehouse::withTrashed()->findOrFail($id);
-        $warehouse->forceDelete();
+        $ids = $request->ids;
         
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الرجاء تحديد المخازن المراد حذفها نهائياً'
+            ], 422);
+        }
+        
+        // فحص ما إذا كانت المخازن المراد حذفها تحتوي على مخازن فرعية
+        $warehouses = Warehouse::onlyTrashed()->whereIn('id', $ids)->get();
+        $hasSubWarehouses = false;
+        $hasProducts = false;
+        
+        foreach ($warehouses as $warehouse) {
+            // فحص المخازن الفرعية حتى المحذوفة
+            $subCount = Warehouse::withTrashed()
+                ->where('parent_id', $warehouse->id)
+                ->count();
+                
+            if ($subCount > 0) {
+                $hasSubWarehouses = true;
+                break;
+            }
+            
+            // ✅ فحص المنتجات
+            $productsCount = $warehouse->products()->withTrashed()->count();
+            if ($productsCount > 0) {
+                $hasProducts = true;
+                break;
+            }
+        }
+        
+        if ($hasSubWarehouses) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن حذف هذه المخازن نهائياً لأن بعضها يحتوي على مخازن فرعية'
+            ], 422);
+        }
+        
+        if ($hasProducts) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن حذف هذه المخازن نهائياً لأن بعضها يحتوي على منتجات'
+            ], 422);
+        }
+        
+        $deleted = Warehouse::onlyTrashed()
+            ->whereIn('id', $ids)
+            ->forceDelete();
+            
         return response()->json([
             'success' => true,
-            'message' => "تم حذف المخزن نهائياً"
+            'message' => "تم حذف {$deleted} مخزن/مخازن نهائياً"
         ]);
+        
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'message' => 'خطأ: ' . $e->getMessage()
+            'message' => 'حدث خطأ: ' . $e->getMessage()
         ], 500);
     }
 }

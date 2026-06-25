@@ -11,29 +11,38 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('warehouses', function (Blueprint $table) {
-    $table->id();
-    $table->string('name'); 
-    $table->unsignedBigInteger('code')->unique()->nullable(); 
-    
-    $table->foreignId('governorate_id')
-          ->nullable()
-          ->constrained('governorates')
-          ->onDelete('cascade');
-    
-    $table->enum('type', ['main', 'sub', 'dispatch_point']);
-    
-    // الربط الهرمي
-    $table->unsignedBigInteger('parent_id')->nullable();
-    $table->foreign('parent_id')->references('id')->on('warehouses')->onDelete('set null');
-    
-    $table->string('manager_name')->nullable();
-    $table->string('manager_phone')->nullable();
-    $table->text('address')->nullable();
-    $table->boolean('status')->default(true); 
-    
-    $table->timestamps();
-});
+        Schema::create('warehouses', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('code')->unique()->nullable();
+            
+            $table->foreignId('governorate_id')
+                  ->nullable()
+                  ->constrained('governorates')
+                  ->onDelete('set null');
+            
+            $table->enum('type', ['main', 'sub', 'dispatch_point'])->default('main');
+            
+            // الربط الهرمي
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->foreign('parent_id')
+                  ->references('id')
+                  ->on('warehouses')
+                  ->onDelete('set null');
+            
+            $table->string('manager_name')->nullable();
+            $table->string('manager_phone')->nullable();
+            $table->text('address')->nullable();
+            $table->boolean('status')->default(true);
+            
+            $table->timestamps();
+            $table->softDeletes(); // Soft Deletes موجود هنا مباشرة
+            
+            // إضافة فهارس
+            $table->index(['type', 'status']);
+            $table->index('parent_id');
+            $table->index('governorate_id');
+        });
     }
 
     /**

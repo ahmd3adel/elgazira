@@ -31,6 +31,7 @@ public function index(Request $request)
                 'receiving_orders.supplier_id',
                 'receiving_orders.warehouse_id',
                 'receiving_orders.product_id',
+                'receiving_orders.created_at',  // ✅ أضف هذا
                 'suppliers.name as supplier_name',
                 'warehouses.name as warehouse_name',
                 'products.name as product_name'
@@ -39,14 +40,13 @@ public function index(Request $request)
             ->leftJoin('warehouses', 'receiving_orders.warehouse_id', '=', 'warehouses.id')
             ->leftJoin('products', 'receiving_orders.product_id', '=', 'products.id');
         
-        // ✅ تصفية حسب المورد إذا تم إرسال supplier_id
+        // تصفية حسب المورد إذا تم إرسال supplier_id
         if ($request->has('supplier_id') && $request->supplier_id != '') {
             $data->where('receiving_orders.supplier_id', $request->supplier_id);
         }
         
         return DataTables::of($data)
             ->addIndexColumn()
-            // ✅ تحديد أسماء الأعمدة بشكل صحيح لـ DataTables
             ->filterColumn('supplier_name', function($query, $keyword) {
                 $query->where('suppliers.name', 'like', "%{$keyword}%");
             })
@@ -74,6 +74,13 @@ public function index(Request $request)
             ->editColumn('departure_time', function($row) {
                 return $row->departure_time ? \Carbon\Carbon::parse($row->departure_time)->format('Y-m-d H:i') : '-';
             })
+            // ✅ أضف هذا العمود الجديد لتاريخ الوصول (التاريخ فقط)
+            ->addColumn('arrival_date', function($row) {
+                if ($row->arrival_time) {
+                    return \Carbon\Carbon::parse($row->arrival_time)->format('Y-m-d');
+                }
+                return '-';
+            })
             ->addColumn('action', function ($row) {
                 return '
                     <div class="btn-group" role="group">
@@ -86,10 +93,7 @@ public function index(Request $request)
             ->make(true);
     }
     
-    // باقي الكود...
-
-    
-    // باقي الكود لتحميل الصفحة الرئيسية
+    // باقي الكود لتحميل الصفحة الرئيسية...
     $warehouses = \App\Models\Warehouse::where('status', 1)->where('type', '!=', 'dispatch_point')->get();
     $products   = \App\Models\Product::all();
     $suppliers  = \App\Models\Supplier::where('status', 1)->get();

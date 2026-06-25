@@ -13,6 +13,8 @@
     "dependencies": {
         "datatables.net-bs4": "^2.3.7",
         "datatables.net-responsive-bs4": "^3.0.8",
+        "jszip": "^3.10.1",
+        "pdfmake": "^0.3.9",
         "select2": "^4.1.0-rc.0",
         "sweetalert2": "^11.26.24"
     }
