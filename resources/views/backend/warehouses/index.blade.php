@@ -179,7 +179,7 @@
                                         <option value="">اختر المخزن الرئيسي...</option>
                                         @foreach ($mainWarehouses as $main)
                                             <option value="{{ $main->id }}">{{ $main->name }}
-                                                ({{ $main->governorate->name }})
+({{ $main->governorate->name ?? '' }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -292,7 +292,7 @@
                                         <option value="">اختر المخزن الرئيسي...</option>
                                         @foreach ($mainWarehouses as $main)
                                             <option value="{{ $main->id }}">{{ $main->name }}
-                                                ({{ $main->governorate->name }})
+                                                ({{ $main->governorate->name  ?? ''}})
                                             </option>
                                         @endforeach
                                     </select>

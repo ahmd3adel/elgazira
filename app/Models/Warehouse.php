@@ -103,14 +103,17 @@ public function canBeDeleted()
 /**
  * الحصول على رسالة منع الحذف المناسبة
  */
+
+
+
+
 public function getDeleteRestrictionMessage()
 {
-    if ($this->subWarehouses()->count() > 0) {
-        $count = $this->subWarehouses()->count();
+    if ($this->subWarehouses()->withTrashed()->count() > 0) {
+        $count = $this->subWarehouses()->withTrashed()->count();
         return "لا يمكن حذف هذا المخزن لأنه يحتوي على {$count} مخازن فرعية";
     }
     
-    // ✅ أضف رسالة المنتجات
     if ($this->products()->count() > 0) {
         $count = $this->products()->count();
         return "لا يمكن حذف هذا المخزن لأنه مرتبط بـ {$count} منتجات";

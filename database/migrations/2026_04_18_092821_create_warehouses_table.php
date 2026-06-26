@@ -19,16 +19,16 @@ return new class extends Migration
             $table->foreignId('governorate_id')
                   ->nullable()
                   ->constrained('governorates')
-                  ->onDelete('set null');
+                  ->onDelete('restrict');
             
             $table->enum('type', ['main', 'sub', 'dispatch_point'])->default('main');
             
             // الربط الهرمي
             $table->unsignedBigInteger('parent_id')->nullable();
-            $table->foreign('parent_id')
-                  ->references('id')
-                  ->on('warehouses')
-                  ->onDelete('set null');
+           $table->foreign('parent_id')
+      ->references('id')
+      ->on('warehouses')
+      ->onDelete('restrict'); // ← بدل set null
             
             $table->string('manager_name')->nullable();
             $table->string('manager_phone')->nullable();
