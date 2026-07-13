@@ -62,8 +62,11 @@ $(document).on('click', '.edit-governorate', function() {
     });
     
     $.ajax({
-        url: "{{ url('admin/governorates') }}/" + id + "/edit",
-        method: 'GET',
+
+
+        url: "{{ url('admin/governorates') }}/" + id,
+method: 'GET',
+
         success: function(data) {
             Swal.close();
             
