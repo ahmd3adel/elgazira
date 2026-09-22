@@ -4,35 +4,39 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class ReceivingOrder extends Model
 {
     use HasFactory;
 
-    // الحقول القابلة للتعبئة
+    // ✅ الحقول القابلة للتعبئة
     protected $fillable = [
         'document_number',
+        'batch_number',
         'warehouse_id',
-        'product_id',           // ✅ أضف هذا
-        'supplier_id',          // ✅ أضف هذا (بدلاً من supplier_name)
-        'quantity',             // ✅ أضف هذا
-        'samples_quantity',     // ✅ أضف هذا
+        'product_id',
+        'supplier_id',
+        'quantity',
+        'samples_quantity',
         'arrival_time',
         'departure_time',
         'notes',
+        'supplier_receipt', // ✅ صورة إذن المورد
         'user_id',
-        'batch_number'
+        'production_date', // ✅ تاريخ الإنتاج
     ];
 
-    // التحويلات (Casts)
+    // ✅ تحويل أنواع البيانات
     protected $casts = [
         'arrival_time' => 'datetime',
         'departure_time' => 'datetime',
         'quantity' => 'integer',
-        'samples_quantity' => 'integer'
+        'samples_quantity' => 'integer',
+        'production_date' => 'date', // ✅ تحويل تاريخ الإنتاج إلى نوع التاريخ
     ];
 
-    // العلاقات
+    // ✅ العلاقات
 
     // أمر الاستلام ينتمي لمستخدم
     public function user()
@@ -47,10 +51,10 @@ class ReceivingOrder extends Model
     }
 
     // أمر الاستلام ينتمي لمنتج
-public function product()
-{
-    return $this->belongsTo(Product::class, 'product_id');
-}
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
 
     // أمر الاستلام ينتمي لمورد
     public function supplier()
@@ -70,7 +74,7 @@ public function product()
         return $this->hasOne(InventoryTransaction::class);
     }
 
-    // دوال مساعدة
+    // ✅ دوال مساعدة
 
     // إجمالي الكمية (أساسي + عينات)
     public function getTotalQuantityAttribute()
@@ -84,5 +88,48 @@ public function product()
         return $this->supplier->name ?? 'غير محدد';
     }
 
+    // ✅ أكسسور للحصول على رابط صورة إذن المورد
+    public function getSupplierReceiptUrlAttribute()
+    {
+        if ($this->supplier_receipt) {
+            return asset('storage/' . $this->supplier_receipt);
+        }
+        return null;
+    }
 
+    // ✅ أكسسور للحصول على اسم الملف
+    public function getSupplierReceiptNameAttribute()
+    {
+        if ($this->supplier_receipt) {
+            return basename($this->supplier_receipt);
+        }
+        return null;
+    }
+
+    // ✅ دالة للتحقق من وجود صورة
+    public function hasSupplierReceipt()
+    {
+        return !is_null($this->supplier_receipt);
+    }
+
+    // ✅ دالة لحذف الصورة
+    public function deleteSupplierReceipt()
+    {
+        if ($this->supplier_receipt && Storage::disk('public')->exists($this->supplier_receipt)) {
+            Storage::disk('public')->delete($this->supplier_receipt);
+        }
+        $this->update(['supplier_receipt' => null]);
+    }
+
+    // ✅ Scope للبحث عن الشحنات التي تحتوي على صور
+    public function scopeWithReceipt($query)
+    {
+        return $query->whereNotNull('supplier_receipt');
+    }
+
+    // ✅ Scope للبحث عن الشحنات بدون صور
+    public function scopeWithoutReceipt($query)
+    {
+        return $query->whereNull('supplier_receipt');
+    }
 }

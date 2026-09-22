@@ -16,6 +16,9 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\DriverController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EmployeeController; // 👈 1. استدعاء كونترولر العاملين هنا
+use App\Http\Controllers\InventoryTransactionController;
+
 
 // ---------------------------------------------------------
 // 1. روابط الواجهة الأمامية (Frontend / Public)
@@ -50,6 +53,13 @@ Route::prefix('admin')->name('admin.')->group(function() {
     Route::resource('departments', DepartmentController::class);
     Route::resource('inventories', InventoryController::class);
     Route::resource('receiving_orders', ReceivingOrderController::class);
+
+Route::get(
+    'receiving-orders/{id}/inspection',
+    [ReceivingOrderController::class, 'inspection']
+)->name('receiving-orders.inspection');
+Route::get('receiving_orders/calculate-expiry', [ReceivingOrderController::class, 'calculateExpiry'])
+    ->name('receiving_orders.calculate-expiry');
     Route::resource('department_allocations', DepartmentAllocationController::class);
     
     // المدارس
@@ -74,4 +84,12 @@ Route::prefix('admin')->name('admin.')->group(function() {
     
     // المناديب
     Route::resource('drivers', DriverController::class);
+
+        Route::resource('employees', EmployeeController::class);
+
+        Route::resource('inventory_transactions', InventoryTransactionController::class);
+        // routes/web.php
+Route::get('inventory_transactions/{id}/json', [InventoryTransactionController::class, 'showJson'])
+    ->name('inventory_transactions.showJson');
+
 });

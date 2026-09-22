@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html dir="rtl">
 @include('backend.layouts.partials.styles')
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
@@ -93,26 +93,45 @@
 
 <script src="{{ asset('assets/backend/plugins/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
 
+<!-- ========== DataTables وملحقاته ========== -->
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
-<!-- تحميل مكتبة Moment.js من السيرفر العالمي (CDN) -->
+
+<!-- ========== DataTables Buttons ========== -->
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap4.min.js"></script>
+
+<!-- ========== مكتبات الأزرار الفردية ========== -->
+<!-- JSZip (مطلوب لـ Excel) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- pdfmake (مطلوب لـ PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<!-- HTML5 أزرار (CSV, Excel, PDF) -->
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+<!-- ✅ تمت إضافة مكتبة الطباعة -->
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+<!-- أزرار إظهار/إخفاء الأعمدة -->
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
+
+<!-- ========== مكتبات إضافية ========== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- ========== Toastr (تم نقله للأعلى قبل AdminLTE) ========== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
 <script src="{{ asset('assets/backend/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js')}}"></script>
 <script src="{{ asset('assets/backend/dist/js/adminlte.js')}}"></script>
 <script src="{{ asset('assets/backend/dist/js/demo.js')}}"></script>
 
 @if(Route::currentRouteName() == 'admin.dashboard' || request()->is('admin/dashboard*'))
     @endif
-
-@stack('custom-js')
-<!-- في نهاية body، قبل @stack('custom-js') -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
 <script>
     // إعدادات toastr
@@ -143,5 +162,7 @@
         @endforeach
     @endif
 </script>
+
+@stack('custom-js')
 </body>
 </html>

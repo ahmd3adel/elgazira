@@ -64,6 +64,14 @@
                 </a>
             </li>
 
+            {{-- زر العاملين الجديد --}}
+            <li class="nav-item">
+                <a href="{{ route('admin.employees.index') }}" class="nav-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">
+                    <i class="nav-icon fas fa-users"></i>
+                    <p>العاملين</p>
+                </a>
+            </li>
+
             {{-- إدارة الأجهزة --}}
             <li class="nav-item">
                 <a href="{{ route('admin.devices.index') }}" class="nav-link {{ request()->routeIs('admin.devices.*') ? 'active' : '' }}">
@@ -90,8 +98,9 @@
                 </a>
             </li>
 
+            {{-- تم تحديث الراوت هنا بنجاح --}}
             <li class="nav-item">
-                <a href="" class="nav-link {{ request()->routeIs('admin.stock.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.inventory_transactions.index') }}" class="nav-link {{ request()->routeIs('admin.inventory_transactions.*') ? 'active' : '' }}">
                     <i class="nav-icon fas fa-chart-line"></i>
                     <p>جرد وحركة المخزون</p>
                 </a>

@@ -8,6 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Department extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'code',
+        'name',
+        'governorate_id',
+        'main_warehouse_id',
+        'operation_warehouse_id',
+        'manager_name',
+        'manager_phone',
+        'status',
+        'notes',
+    ];
+    
         public function governorate(){
         return $this->belongsTo(Governorate::class);
     }
