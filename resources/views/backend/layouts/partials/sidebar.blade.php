@@ -130,6 +130,13 @@
                             <p>مراقبة الأرصدة العامة</p>
                         </a>
                     </li>
+
+                      <li class="nav-item">
+                        <a href="{{ url('admin/stock_balances') }}" class="nav-link {{ url('admin/stock_balances') ? 'active' : '' }}">
+                            <i class="fas fa-chart-pie nav-icon"></i>
+                            <p>                                          تمام الجزيرة   </p>
+                        </a>
+                    </li>
                     
                     <li class="nav-item">
                         <a href="" class="nav-link {{ request()->routeIs('admin.inventories.total') ? 'active' : '' }}">

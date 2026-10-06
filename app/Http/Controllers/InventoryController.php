@@ -110,18 +110,45 @@ public function all_warehouses(Request $request)
 {
     $products = Product::orderBy('name')->get();
     
-    // جلب الكل: رئيسي، فرعي، ونقاط توزيع
     $warehouses = \App\Models\Warehouse::orderByRaw("FIELD(type, 'main', 'sub', 'dispatch_point')")
         ->orderBy('name', 'asc')
         ->get();
 
-    // خريطة المخزون كما هي في قاعدة البيانات
-    $inventoryMap = \App\Models\Inventory::all()
-        ->groupBy('warehouse_id')
-        ->map(function ($items) {
-            return $items->keyBy('product_id')->map->quantity;
-        });
+    $allInventory = \App\Models\Inventory::with('warehouse')->get();
+    
+    $inventoryMap = [];
+    $productTotals = [];
 
-    return view('backend.inventories.all_transactions', compact('products', 'warehouses', 'inventoryMap'));
+    foreach ($allInventory as $item) {
+        $warehouse = $item->warehouse;
+        
+        if (!$warehouse) continue;
+
+        // ✅ نخزّن الرصيد باسم المخزن الأصلي بدون أي دمج
+        if (!isset($inventoryMap[$warehouse->id][$item->product_id])) {
+            $inventoryMap[$warehouse->id][$item->product_id] = 0;
+        }
+        $inventoryMap[$warehouse->id][$item->product_id] += $item->quantity;
+        
+        // ✅ إجمالي كل منتج في النظام كله
+        if (!isset($productTotals[$item->product_id])) {
+            $productTotals[$item->product_id] = 0;
+        }
+        $productTotals[$item->product_id] += $item->quantity;
+    }
+
+    // ✅ تأكد إن كل منتج عندها قيمة (حتى 0)
+    foreach ($products as $product) {
+        if (!isset($productTotals[$product->id])) {
+            $productTotals[$product->id] = 0;
+        }
+    }
+
+    return view('backend.inventories.all_transactions', compact(
+        'products', 
+        'warehouses', 
+        'inventoryMap', 
+        'productTotals'
+    ));
 }
 }

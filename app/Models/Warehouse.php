@@ -121,4 +121,27 @@ public function getDeleteRestrictionMessage()
     
     return 'لا يمكن حذف هذا المخزن لوجود قيود عليه';
 }
+
+/**
+ * جلب كل الفروع (متداخلة) - للاستخدام في التصدير
+ */
+public function allSubWarehouses()
+{
+    return $this->subWarehouses()->with('allSubWarehouses');
+}
+
+/**
+ * جلب كل الفروع بشكل مسطح (IDs فقط)
+ */
+public function getAllSubWarehouseIds()
+{
+    $ids = [];
+    
+    foreach ($this->subWarehouses as $sub) {
+        $ids[] = $sub->id;
+        $ids = array_merge($ids, $sub->getAllSubWarehouseIds());
+    }
+    
+    return $ids;
+}
 }

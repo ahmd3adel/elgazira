@@ -86,9 +86,9 @@ class StockTransferController extends Controller
                 $transfer = StockTransfer::create([
                     'from_warehouse_id' => $request->from_warehouse_id,
                     'to_warehouse_id'   => $request->to_warehouse_id,
-                    'transfer_number'   => 'TRF-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                    // 'transfer_number'   => 'TRF-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
                     'type'              => $request->type,
-                    'status'            => 'completed',
+                    // 'status'            => 'completed',
                 ]);
                 
                 $baseProductId = null;
@@ -131,7 +131,7 @@ class StockTransferController extends Controller
                 
                 // 4. تحديث إجمالي الوجبات في جدول التحويل
                 $totalMeals = $this->calculateTotalMeals($items);
-                $transfer->update(['total_meals' => $totalMeals]);
+                // $transfer->update(['total_meals' => $totalMeals]);
                 
                 return redirect()->route('admin.transfers.index')
                     ->with('success', "تم تنفيذ التحويل بنجاح. كمية الأساسي: {$baseQuantity} | إجمالي الوجبات: {$totalMeals}");

@@ -9,16 +9,16 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'code',
-        'name',
-        'description',
-        'quantity',
-        'price',
-        'expiry_date',
-        'companion_product_id',
-        'status',
-    ];
+protected $fillable = [
+    'code', 'name', 'description', 'quantity', 'price',
+    'expiry_date', 'companion_product_id', 'status',
+    'is_base', 'conversion_factor', // ✅ إضافة
+];
+
+protected $casts = [
+    'is_base' => 'boolean',
+    'conversion_factor' => 'integer',
+];
 
     // العلاقات
     public function suppliers()

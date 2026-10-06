@@ -9,12 +9,15 @@ class StockTransfer extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'from_warehouse_id',
-        'to_warehouse_id',
-        'type',
-        'notes',
-    ];
+protected $fillable = [
+    'from_warehouse_id',
+    'to_warehouse_id',
+    'transfer_number',  // ✅
+    'type',
+    'status',           // ✅
+    'total_meals',      // ✅
+    'notes',
+];
 
     /**
      * العلاقة مع المخزن المصدر (الذي خرجت منه البضاعة)

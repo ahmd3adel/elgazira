@@ -15,6 +15,8 @@ use App\Models\Inventory;
 use App\Models\InventoryTransaction;
 use App\Models\Product;
 use Illuminate\Support\Facades\Log;
+use App\Models\Warehouse;
+
 class DepartmentAllocationController extends Controller
 {
     /**
@@ -65,7 +67,254 @@ public function index(Request $request)
     $departments = \App\Models\Department::all();
     return view('backend.department_allocations.index', compact('products', 'departments'));
 }
+/**
+ * جلب بيانات إذن صرف للتعديل (AJAX)
+ */
+public function editData($id)
+{
+    try {
+        $allocation = DepartmentAllocation::with(['items.product', 'department'])
+            ->findOrFail($id);
 
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id'             => $allocation->id,
+                'department_id'  => $allocation->department_id,
+                'department_name'=> optional($allocation->department)->name,
+                'receite_date'   => $allocation->receite_date
+                                        ? $allocation->receite_date->format('Y-m-d')
+                                        : null,
+                'notes'          => $allocation->notes,
+                'items'          => $allocation->items->map(function ($item) {
+                    return [
+                        'id'         => $item->id,
+                        'product_id' => $item->product_id,
+                        'product_name' => optional($item->product)->name,
+                        'quantity'   => (int) $item->quantity,
+                        'is_base'    => (bool) optional($item->product)->is_base,
+                    ];
+                })->values(),
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
+    }
+}
+
+/**
+ * تحديث إذن الصرف (مع إعادة احتساب المخزون)
+ */
+public function updateAllocation(Request $request, $id)
+{
+    try {
+        DB::beginTransaction();
+
+        $allocation = DepartmentAllocation::with('items')->findOrFail($id);
+        $department = Department::with('operationWarehouse')->findOrFail($request->department_id);
+        $warehouseId = $department->operation_warehouse_id;
+
+        if (!$warehouseId) {
+            throw new \Exception("الإدارة {$department->name} ليس لديها مخزن تشغيل مرتبط.");
+        }
+
+        $warehouse = Warehouse::find($warehouseId);
+        if (!$warehouse || !$warehouse->status) {
+            throw new \Exception("مخزن التشغيل غير نشط أو غير موجود");
+        }
+
+        // ========== 1. إرجاع الكميات القديمة أولاً ==========
+        foreach ($allocation->items as $oldItem) {
+            // إرجاع الكمية لمخزن التشغيل
+            Inventory::where('warehouse_id', $warehouseId)
+                ->where('product_id', $oldItem->product_id)
+                ->increment('quantity', $oldItem->quantity);
+
+            // حذف حركة المخزون القديمة
+// ✅ صح — نستخدم reference_number
+InventoryTransaction::where('reference_number', 'DA-' . $allocation->id)
+    ->where('product_id', $oldItem->product_id)
+    ->where('type', 'out')
+    ->delete();
+        }
+
+        // حذف العناصر القديمة
+        DepartmentAllocationItem::where('allocation_id', $allocation->id)->delete();
+
+        // ========== 2. التحقق من التوازن ==========
+        $baseQuantity = 0;
+        $otherTotal = 0;
+        $hasBaseProduct = false;
+
+        foreach ($request->items as $item) {
+            $product = Product::find($item['product_id']);
+            if (!$product) continue;
+
+            if ($product->is_base) {
+                $hasBaseProduct = true;
+                $baseQuantity = (int) $item['quantity'];
+            } else {
+                $otherTotal += (int) $item['quantity'];
+            }
+        }
+
+        if (!$hasBaseProduct) {
+            throw new \Exception('يجب إضافة الصنف الأساسي إلى إذن الصرف');
+        }
+
+        if ($baseQuantity !== $otherTotal) {
+            $diff = abs($baseQuantity - $otherTotal);
+            throw new \Exception(
+                "⚠️ عدم توازن: كمية الصنف الأساسي ($baseQuantity) " .
+                ($baseQuantity > $otherTotal ? "أكبر من" : "أقل من") .
+                " مجموع الأصناف التامة ($otherTotal) بفارق $diff"
+            );
+        }
+
+        // ========== 3. التحقق من الرصيد الجديد ==========
+        $stockErrors = [];
+        foreach ($request->items as $item) {
+            $product = Product::find($item['product_id']);
+            $stock = Inventory::where('warehouse_id', $warehouseId)
+                ->where('product_id', $item['product_id'])
+                ->first();
+            $available = $stock ? $stock->quantity : 0;
+
+            if ($available < $item['quantity']) {
+                $stockErrors[] = "• {$product->name}: متاح {$available} / مطلوب {$item['quantity']}";
+            }
+        }
+
+        if (!empty($stockErrors)) {
+            throw new \Exception(
+                "❌ الرصيد غير كافٍ في مخزن الإدارة ({$warehouse->name}):\n" .
+                implode("\n", $stockErrors)
+            );
+        }
+
+        // ========== 4. تحديث الإذن ==========
+        $allocation->update([
+            'receite_date'  => $request->order_date,
+            'department_id' => $request->department_id,
+            'notes'         => $request->notes,
+        ]);
+
+        $totalMealsSum = 0;
+
+        // ========== 5. الصرف الجديد ==========
+        foreach ($request->items as $item) {
+            $product = Product::find($item['product_id']);
+            $conversionFactor = $product->conversion_factor ?? 1;
+            $totalMeals = $item['quantity'] * $conversionFactor;
+
+            Inventory::where('warehouse_id', $warehouseId)
+                ->where('product_id', $item['product_id'])
+                ->decrement('quantity', $item['quantity']);
+
+            Inventory::where('warehouse_id', $warehouseId)
+                ->where('product_id', $item['product_id'])
+                ->update(['last_movement_at' => now()]);
+InventoryTransaction::create([
+    'product_id'       => $product->id,
+    'warehouse_id'     => $warehouseId,
+    'type'             => 'out',
+    'reference_number' => 'DA-' . $allocation->id,
+    'quantity'         => $item['quantity'],
+    'user_id'          => auth()->id() ?? 1,
+    'notes'            => "تعديل صرف لإدارة: {$department->name}",
+]);
+
+            DepartmentAllocationItem::create([
+                'allocation_id' => $allocation->id,
+                'product_id'    => $item['product_id'],
+                'quantity'      => $item['quantity'],
+                'total_meals'   => $totalMeals,
+            ]);
+
+            $totalMealsSum += $totalMeals;
+        }
+
+        $allocation->update(['total_meals' => $totalMealsSum]);
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => "تم تحديث إذن الصرف بنجاح. إجمالي الوجبات: {$totalMealsSum}",
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error updating department allocation: ' . $e->getMessage());
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
+
+/**
+ * استرداد إذن الصرف (إرجاع الكميات للمخزون + حذف الإذن)
+ */
+public function refund($id)
+{
+    try {
+        DB::beginTransaction();
+
+        $allocation = DepartmentAllocation::with(['items.product', 'department'])
+            ->findOrFail($id);
+
+        $department = $allocation->department;
+        $warehouseId = $department ? $department->operation_warehouse_id : null;
+
+        if (!$warehouseId) {
+            throw new \Exception("لا يوجد مخزن تشغيل مرتبط بالإدارة");
+        }
+
+        $warehouse = Warehouse::find($warehouseId);
+        if (!$warehouse) {
+            throw new \Exception("مخزن التشغيل غير موجود");
+        }
+
+        // ========== إرجاع الكميات للمخزون ==========
+        foreach ($allocation->items as $item) {
+            // إرجاع الكمية لمخزن التشغيل
+            Inventory::where('warehouse_id', $warehouseId)
+                ->where('product_id', $item->product_id)
+                ->increment('quantity', $item->quantity);
+
+            // تحديث آخر حركة
+            Inventory::where('warehouse_id', $warehouseId)
+                ->where('product_id', $item->product_id)
+                ->update(['last_movement_at' => now()]);
+
+            // تسجيل حركة إرجاع
+// عند تسجيل حركة الإرجاع
+InventoryTransaction::create([
+    'product_id'       => $item->product_id,
+    'warehouse_id'     => $warehouseId,
+    'type'             => 'in',
+    'reference_number' => 'DA-REFUND-' . $allocation->id,   // 👈 مرجع مميز للاسترداد
+    'quantity'         => $item->quantity,
+    'user_id'          => auth()->id() ?? 1,
+    'notes'            => "استرداد إذن صرف رقم #{$allocation->id} - إدارة: {$department->name}",
+]);
+        }
+
+        // حذف تفاصيل الإذن
+        DepartmentAllocationItem::where('allocation_id', $allocation->id)->delete();
+
+        // حذف الإذن
+        $allocation->delete();
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => "تم استرداد الإذن وإرجاع الكميات لمخزن الإدارة بنجاح.",
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error refunding department allocation: ' . $e->getMessage());
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
 /**
  * عرض البيانات العادية (كل صف على حدة)
  */
@@ -208,46 +457,49 @@ private function getGroupedData($query, $allProducts, $request)
 public function store(StoreDepartmentAllocationRequest $request)
 {
     try {
-        // ========== 1. التحقق الأساسي من الطلب ==========
-        $request->validate([
-            'department_id' => 'required|exists:departments,id',
-            'order_date'    => 'required|date',
-            'items'         => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity'   => 'required|integer|min:1',
-        ]);
+        DB::beginTransaction();
 
-        $department = Department::with('operationWarehouse')->findOrFail($request->department_id);
+        // ========== 1. جلب الإدارة ومخزن التشغيل ==========
+        $department = Department::with('operationWarehouse')
+            ->findOrFail($request->department_id);
         $warehouseId = $department->operation_warehouse_id;
 
         if (!$warehouseId) {
-            throw new \Exception("الإدارة {$department->name} ليس لديها مخزن تشغيل مرتبط");
+            throw new \Exception(
+                "الإدارة {$department->name} ليس لديها مخزن تشغيل مرتبط. " .
+                "يرجى ضبط مخزن التشغيل أولاً من إعدادات الإدارة."
+            );
         }
 
-        // ========== 2. التحقق من التوازن (الصنف الأساسي = مجموع التامة) ==========
-        $baseQuantity  = 0;
-        $otherTotal    = 0;
+        // التحقق إن مخزن التشغيل نشط
+        $warehouse = Warehouse::find($warehouseId);
+        if (!$warehouse || !$warehouse->status) {
+            throw new \Exception("مخزن التشغيل غير نشط أو غير موجود");
+        }
+
+        // ========== 2. التحقق من التوازن (الأساسي = التامة) ==========
+        $baseQuantity   = 0;
+        $otherTotal     = 0;
         $hasBaseProduct = false;
-        $baseProductId  = null;
+        $baseProductName = '';
 
         foreach ($request->items as $item) {
             $product = Product::find($item['product_id']);
             if (!$product) continue;
 
             if ($product->is_base) {
-                $hasBaseProduct = true;
-                $baseProductId  = $product->id;
-                $baseQuantity   = (int) $item['quantity'];
+                $hasBaseProduct  = true;
+                $baseQuantity    = (int) $item['quantity'];
+                $baseProductName = $product->name;
             } else {
                 $otherTotal += (int) $item['quantity'];
             }
         }
 
         if (!$hasBaseProduct) {
-            return response()->json([
-                'success' => false,
-                'message' => 'يجب إضافة الصنف الأساسي (سادة 40) إلى إذن الصرف'
-            ], 422);
+            throw new \Exception(
+                'يجب إضافة الصنف الأساسي (سادة 40) إلى إذن الصرف'
+            );
         }
 
         if ($baseQuantity !== $otherTotal) {
@@ -255,60 +507,72 @@ public function store(StoreDepartmentAllocationRequest $request)
             $message = "⚠️ عدم توازن: كمية الصنف الأساسي ($baseQuantity) " .
                        ($baseQuantity > $otherTotal ? "أكبر من" : "أقل من") .
                        " مجموع الأصناف التامة ($otherTotal) بفارق $difference";
-            return response()->json([
-                'success' => false,
-                'message' => $message
-            ], 422);
+            throw new \Exception($message);
         }
 
-        // ========== 3. التحقق من الرصيد الكافي قبل البدء (نفس سياسة التحويل) ==========
+        // ========== 3. التحقق من الرصيد في مخزن التشغيل قبل البدء ==========
+        $stockErrors = [];
+
         foreach ($request->items as $item) {
-            $sourceStock = Inventory::where('warehouse_id', $warehouseId)
+            $product = Product::find($item['product_id']);
+            $stock = Inventory::where('warehouse_id', $warehouseId)
                 ->where('product_id', $item['product_id'])
                 ->first();
 
-            if (!$sourceStock || $sourceStock->quantity < $item['quantity']) {
-                $product = Product::find($item['product_id']);
-                throw new \Exception("الرصيد غير كافٍ للمنتج: {$product->name} في مخزن الإدارة");
+            $available = $stock ? $stock->quantity : 0;
+
+            if ($available < $item['quantity']) {
+                $stockErrors[] = "• {$product->name}: متاح {$available} / مطلوب {$item['quantity']}";
             }
         }
 
-        // ========== 4. تنفيذ العملية داخل Transaction ==========
-        DB::beginTransaction();
+        if (!empty($stockErrors)) {
+            throw new \Exception(
+                "❌ الرصيد غير كافٍ في مخزن الإدارة ({$warehouse->name}):\n" .
+                implode("\n", $stockErrors) .
+                "\n\nيرجى تحويل الكميات المطلوبة من المخزن الرئيسي أولاً."
+            );
+        }
 
+        // ========== 4. إنشاء إذن الصرف ==========
         $allocation = DepartmentAllocation::create([
-            'receite_date'   => $request->order_date,
-            'department_id'  => $request->department_id,
-            'created_by'     => auth()->id() ?? 1,
-            'notes'          => $request->notes,
-            'total_meals'    => 0,
+            'receite_date'  => $request->order_date,
+            'department_id' => $request->department_id,
+            'created_by'    => auth()->id() ?? 1,
+            'notes'         => $request->notes,
+            'total_meals'   => 0,
         ]);
 
         $totalMealsSum = 0;
 
+        // ========== 5. الصرف والخصم ==========
         foreach ($request->items as $item) {
             $product = Product::find($item['product_id']);
             $conversionFactor = $product->conversion_factor ?? 1;
             $totalMeals = $item['quantity'] * $conversionFactor;
 
-            // الخصم من المخزون
+            // ✅ خصم من مخزن التشغيل
             Inventory::where('warehouse_id', $warehouseId)
                 ->where('product_id', $item['product_id'])
                 ->decrement('quantity', $item['quantity']);
 
-            // تسجيل حركة المخزون
-            InventoryTransaction::create([
-                'department_allocation_id' => $allocation->id,
-                'product_id'   => $product->id,
-                'warehouse_id' => $warehouseId,
-                'type'         => 'out',
-                'quantity'     => $item['quantity'],
-                'total_meals'  => $totalMeals,
-                'user_id'      => auth()->id() ?? 1,
-                'notes'        => "صرف لإدارة: {$department->name}",
-            ]);
+            // ✅ تحديث last_movement_at
+            Inventory::where('warehouse_id', $warehouseId)
+                ->where('product_id', $item['product_id'])
+                ->update(['last_movement_at' => now()]);
 
-            // تسجيل تفاصيل الإذن
+            // تسجيل حركة المخزون
+  InventoryTransaction::create([
+    'product_id'       => $product->id,
+    'warehouse_id'     => $warehouseId,
+    'type'             => 'out',
+    'reference_number' => 'DA-' . $allocation->id,   // 👈 مرجع الإذن
+    'quantity'         => $item['quantity'],
+    'user_id'          => auth()->id() ?? 1,
+    'notes'            => "صرف لإدارة: {$department->name}",
+]);
+
+            // تفاصيل الإذن
             DepartmentAllocationItem::create([
                 'allocation_id' => $allocation->id,
                 'product_id'    => $item['product_id'],
@@ -325,7 +589,7 @@ public function store(StoreDepartmentAllocationRequest $request)
 
         return response()->json([
             'success' => true,
-            'message' => "تم تسجيل إذن الصرف وخصم المخزون بنجاح. إجمالي الوجبات: {$totalMealsSum}",
+            'message' => "تم تسجيل إذن الصرف بنجاح. إجمالي الوجبات: {$totalMealsSum}",
             'data'    => $allocation->load('items.product')
         ], 201);
 
@@ -339,7 +603,6 @@ public function store(StoreDepartmentAllocationRequest $request)
         ], 500);
     }
 }
-
 
 private function deductFromInventory($productId, $quantity)
 {

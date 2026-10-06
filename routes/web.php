@@ -18,6 +18,8 @@ use App\Http\Controllers\DriverController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController; // 👈 1. استدعاء كونترولر العاملين هنا
 use App\Http\Controllers\InventoryTransactionController;
+use App\Http\Controllers\StockBalanceController;
+
 
 
 // ---------------------------------------------------------
@@ -60,8 +62,19 @@ Route::get(
 )->name('receiving-orders.inspection');
 Route::get('receiving_orders/calculate-expiry', [ReceivingOrderController::class, 'calculateExpiry'])
     ->name('receiving_orders.calculate-expiry');
-    Route::resource('department_allocations', DepartmentAllocationController::class);
-    
+// ========== Department Allocations ==========
+// ✅ routes مخصصة BEFORE resource لتجنب التعارض
+Route::get('department_allocations/{id}/edit-data', [DepartmentAllocationController::class, 'editData'])
+    ->name('department_allocations.editData');
+
+Route::put('department_allocations/{id}/update-allocation', [DepartmentAllocationController::class, 'updateAllocation'])
+    ->name('department_allocations.updateAllocation');
+
+Route::post('department_allocations/{id}/refund', [DepartmentAllocationController::class, 'refund'])
+    ->name('department_allocations.refund');
+
+// ✅ ثم الـ resource
+Route::resource('department_allocations', DepartmentAllocationController::class);    
     // المدارس
     Route::resource('schools', SchoolController::class);
     Route::get('schools/by-department', [SchoolController::class, 'getByDepartment'])->name('schools.by_department');
@@ -91,5 +104,12 @@ Route::get('receiving_orders/calculate-expiry', [ReceivingOrderController::class
         // routes/web.php
 Route::get('inventory_transactions/{id}/json', [InventoryTransactionController::class, 'showJson'])
     ->name('inventory_transactions.showJson');
+
+    Route::get('stock_balances', [StockBalanceController::class, 'index'])
+        ->name('stock_balances.index');
+    
+    Route::get('stock_balances/{productId}/{warehouseId}/details', [StockBalanceController::class, 'details'])
+        ->name('stock_balances.details');
+
 
 });
