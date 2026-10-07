@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmployeeController; // 👈 1. استدعاء كونترولر العاملين هنا
 use App\Http\Controllers\InventoryTransactionController;
 use App\Http\Controllers\StockBalanceController;
-
+use App\Http\Controllers\MilkAllocationController;
 
 
 // ---------------------------------------------------------
@@ -111,5 +111,12 @@ Route::get('inventory_transactions/{id}/json', [InventoryTransactionController::
     Route::get('stock_balances/{productId}/{warehouseId}/details', [StockBalanceController::class, 'details'])
         ->name('stock_balances.details');
 
-
+// ========== Milk Allocations ==========
+Route::prefix('milk_allocations')->name('milk_allocations.')->group(function () {
+    Route::get('/', [MilkAllocationController::class, 'index'])->name('index');
+    Route::post('/', [MilkAllocationController::class, 'store'])->name('store');
+    Route::get('{id}/edit-data', [MilkAllocationController::class, 'editData'])->name('editData');
+    Route::put('{id}', [MilkAllocationController::class, 'update'])->name('update');
+    Route::delete('{id}', [MilkAllocationController::class, 'destroy'])->name('destroy');
+});
 });
