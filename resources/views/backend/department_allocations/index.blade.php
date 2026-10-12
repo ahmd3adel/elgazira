@@ -352,6 +352,7 @@
         table = $('#distribution_allocations_table').DataTable({
             processing: true,
             serverSide: true,
+            pageLength: 100,
             ajax: {
                 url: "{{ route('admin.department_allocations.index') }}",
                 type: "GET",
@@ -407,7 +408,6 @@
                 }
             ],
             language: { url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json" },
-            pageLength: 25,
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "الكل"]],
             dom: 'Bfrtip',
             buttons: [
