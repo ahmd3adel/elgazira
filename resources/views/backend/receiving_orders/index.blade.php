@@ -200,6 +200,26 @@
             background-color: #6c757d;
             color: white;
         }
+
+        /* ✅ تنسيق زر تصدير Excel */
+        #exportExcelBtn {
+            background: linear-gradient(135deg, #1e7e34, #28a745);
+            border: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #exportExcelBtn:hover {
+            background: linear-gradient(135deg, #155724, #1e7e34);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        #exportExcelBtn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
     </style>
 @endpush
 
@@ -544,6 +564,10 @@
                                 data-target="#addReceivingOrderModal">
                                 <i class="fas fa-plus"></i> إضافة شحنة
                             </button>
+                            {{-- ✅ زر تصدير Excel --}}
+                            <button type="button" class="btn btn-success btn-sm" id="exportExcelBtn">
+                                <i class="fas fa-file-excel"></i> تصدير Excel
+                            </button>
                             <button type="button" class="btn btn-tool" data-card-widget="collapse">
                                 <i class="fas fa-minus"></i>
                             </button>
@@ -563,7 +587,7 @@
                                         <th>رقم الإذن</th>
                                         <th>رقم التشغيلة</th>
                                         <th style="width: 120px">تاريخ الإنتاج</th>
-                                        <th style="width: 120px">تاريخ الانتهاء</th> {{-- ✅ --}}
+                                        <th style="width: 120px">تاريخ الانتهاء</th>
                                         <th>المورد</th>
                                         <th>المنتج</th>
                                         <th>المخزن</th>
@@ -664,7 +688,7 @@
                                 <input type="number" name="quantity" id="quantity" class="form-control shadow-sm"
                                     value="600" min="1" required>
                             </div>
-                            <!-- تاريخ الإنتاج -->
+
                             <!-- تاريخ الإنتاج -->
                             <div class="col-md-6">
                                 <label for="production_date" class="form-label fw-semibold">
@@ -683,6 +707,7 @@
                                     readonly placeholder="يُحسب تلقائياً من مدة صلاحية المنتج">
                                 <small class="text-muted">يُحسب من: تاريخ الإنتاج + مدة صلاحية المنتج</small>
                             </div>
+
                             <!-- عدد العينات -->
                             <div class="col-md-3">
                                 <label for="samples_quantity" class="form-label fw-semibold">عدد العينات</label>
@@ -986,6 +1011,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{-- ✅ مكتبة SheetJS لتصدير Excel --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
         var table;
@@ -1018,124 +1045,124 @@
                 processing: true,
                 serverSide: true,
                 autoWidth: false,
-                 pageLength: 100,
+                pageLength: 100,
                 ajax: {
                     url: "{{ route('admin.receiving_orders.index') }}",
                     type: "GET"
                 },
-  columns: [
-    { 
-        data: 'DT_RowIndex', 
-        name: 'id', 
-        orderable: false, 
-        searchable: false, 
-        className: 'text-center',
-        render: function(data) {
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'arrival_date', 
-        name: 'arrival_time', 
-        className: 'text-center',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'document_number', 
-        name: 'document_number', 
-        className: 'text-center',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'batch_number', 
-        name: 'batch_number', 
-        className: 'text-center',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'production_date', 
-        name: 'production_date', 
-        className: 'text-center',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'expiry_date', 
-        name: 'expiry_date', 
-        className: 'text-center',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'supplier_name', 
-        name: 'supplier_name',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'product_name', 
-        name: 'product_name',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'warehouse_name', 
-        name: 'warehouse_name',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'quantity', 
-        name: 'quantity', 
-        className: 'text-center',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'samples_quantity', 
-        name: 'samples_quantity', 
-        className: 'text-center',
-        render: function(data) {
-            if (!data || data === '-') return '<span class="text-muted">-</span>';
-            return '<span style="white-space: nowrap;">' + data + '</span>';
-        }
-    },
-    { 
-        data: 'supplier_receipt', 
-        name: 'supplier_receipt', 
-        className: 'text-center', 
-        orderable: false, 
-        searchable: false
-    },
-    { 
-        data: 'action', 
-        name: 'action', 
-        orderable: false, 
-        searchable: false, 
-        className: 'text-center'
-    }
-],
+                columns: [
+                    {
+                        data: 'DT_RowIndex',
+                        name: 'id',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center',
+                        render: function(data) {
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'arrival_date',
+                        name: 'arrival_time',
+                        className: 'text-center',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'document_number',
+                        name: 'document_number',
+                        className: 'text-center',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'batch_number',
+                        name: 'batch_number',
+                        className: 'text-center',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'production_date',
+                        name: 'production_date',
+                        className: 'text-center',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'expiry_date',
+                        name: 'expiry_date',
+                        className: 'text-center',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'supplier_name',
+                        name: 'supplier_name',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'product_name',
+                        name: 'product_name',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'warehouse_name',
+                        name: 'warehouse_name',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'quantity',
+                        name: 'quantity',
+                        className: 'text-center',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'samples_quantity',
+                        name: 'samples_quantity',
+                        className: 'text-center',
+                        render: function(data) {
+                            if (!data || data === '-') return '<span class="text-muted">-</span>';
+                            return '<span style="white-space: nowrap;">' + data + '</span>';
+                        }
+                    },
+                    {
+                        data: 'supplier_receipt',
+                        name: 'supplier_receipt',
+                        className: 'text-center',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
+                    }
+                ],
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/ar.json",
                     search: "بحث:",
@@ -1147,7 +1174,6 @@
                     zeroRecords: "لم يتم العثور على سجلات",
                     emptyTable: "لا توجد بيانات متاحة"
                 },
-                // ✅ إصلاح مشكلة collapse
                 initComplete: function() {
                     $('.dataTables_scrollHead').css('width', '100%');
                     $('.dataTables_scrollHeadInner').css('width', '100%');
@@ -1197,13 +1223,113 @@
                     $('#receiving-orders-table').css('width', '100%');
                 }, 400);
             });
+
+            // ==========================================
+            // ✅ تصدير جدول الشحنات إلى Excel
+            // ==========================================
+            $(document).on('click', '#exportExcelBtn', function() {
+                let btn = $(this);
+                let originalHtml = btn.html();
+                btn.html('<i class="fas fa-spinner fa-spin"></i> جاري التصدير...').prop('disabled', true);
+
+                // ✅ بناء رابط التصدير مع الحفاظ على التصفية الحالية
+                let currentUrl = table.ajax.url();
+                let separator = currentUrl.includes('?') ? '&' : '?';
+                let exportUrl = currentUrl + separator + 'export=1';
+
+                $.ajax({
+                    url: exportUrl,
+                    method: 'GET',
+                    success: function(response) {
+                        try {
+                            let rows = response.data || [];
+
+                            if (rows.length === 0) {
+                                Swal.fire('تنبيه', 'لا توجد بيانات للتصدير', 'warning');
+                                btn.html(originalHtml).prop('disabled', false);
+                                return;
+                            }
+
+                            // ✅ تجهيز البيانات للتصدير
+                            let exportData = rows.map(function(row, index) {
+                                return {
+                                    '#': index + 1,
+                                    'تاريخ الوصول': stripHtml(row.arrival_date),
+                                    'رقم الإذن': stripHtml(row.document_number),
+                                    'رقم التشغيلة': stripHtml(row.batch_number),
+                                    'تاريخ الإنتاج': stripHtml(row.production_date),
+                                    'تاريخ الانتهاء': stripHtml(row.expiry_date),
+                                    'المورد': stripHtml(row.supplier_name),
+                                    'المنتج': stripHtml(row.product_name),
+                                    'المخزن': stripHtml(row.warehouse_name),
+                                    'الكمية': stripHtml(row.quantity),
+                                    'العينات': stripHtml(row.samples_quantity),
+                                    'إذن المورد': row.supplier_receipt ? 'موجود' : 'لا يوجد'
+                                };
+                            });
+
+                            // ✅ إنشاء ملف Excel
+                            let ws = XLSX.utils.json_to_sheet(exportData);
+
+                            // ✅ ضبط عرض الأعمدة
+                            ws['!cols'] = [
+                                { wch: 6 },   // #
+                                { wch: 14 },  // تاريخ الوصول
+                                { wch: 16 },  // رقم الإذن
+                                { wch: 16 },  // رقم التشغيلة
+                                { wch: 14 },  // تاريخ الإنتاج
+                                { wch: 14 },  // تاريخ الانتهاء
+                                { wch: 25 },  // المورد
+                                { wch: 25 },  // المنتج
+                                { wch: 20 },  // المخزن
+                                { wch: 10 },  // الكمية
+                                { wch: 10 },  // العينات
+                                { wch: 12 }   // إذن المورد
+                            ];
+
+                            let wb = XLSX.utils.book_new();
+                            XLSX.utils.book_append_sheet(wb, ws, 'الشحنات');
+
+                            // ✅ اسم الملف مع التاريخ
+                            let today = moment().format('YYYY-MM-DD_HH-mm');
+                            let fileName = 'الشحنات_' + today + '.xlsx';
+
+                            XLSX.writeFile(wb, fileName);
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'تم التصدير بنجاح',
+                                text: 'تم تصدير ' + rows.length + ' سجل',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } catch (err) {
+                            console.error(err);
+                            Swal.fire('خطأ!', 'حدث خطأ أثناء إنشاء ملف Excel', 'error');
+                        }
+                        btn.html(originalHtml).prop('disabled', false);
+                    },
+                    error: function(xhr) {
+                        Swal.fire('خطأ!', 'تعذر جلب البيانات للتصدير', 'error');
+                        btn.html(originalHtml).prop('disabled', false);
+                    }
+                });
+            });
+
+            // ✅ دالة مساعدة لإزالة وسوم HTML من النصوص
+            function stripHtml(html) {
+                if (html === null || html === undefined || html === '-') return '';
+                let tmp = document.createElement('div');
+                tmp.innerHTML = String(html);
+                return (tmp.textContent || tmp.innerText || '').trim();
+            }
+
             // ==========================================
             // تعديل شحنة
             // ==========================================
             $(document).on('click', '.edit-receiving-order', function() {
                 let id = $(this).data('id');
 
-                // إظهار مؤشر التحميل
                 Swal.fire({
                     title: 'جاري التحميل...',
                     allowOutsideClick: false,
@@ -1216,7 +1342,6 @@
                     success: function(data) {
                         Swal.close();
 
-                        // تعبئة البيانات الأساسية
                         $('#edit_id').val(data.id);
                         $('#edit_document_number').val(data.document_number);
                         $('#edit_batch_number').val(data.batch_number || '');
@@ -1224,19 +1349,19 @@
                         $('#edit_quantity').val(data.quantity);
                         $('#edit_samples_quantity').val(data.samples_quantity || 0);
 
-                        // تنسيق الوقت
                         $('#edit_arrival_time').val(data.arrival_time ? moment(data
                             .arrival_time).format('YYYY-MM-DDTHH:mm') : '');
                         $('#edit_departure_time').val(data.departure_time ? moment(data
                             .departure_time).format('YYYY-MM-DDTHH:mm') : '');
                         $('#edit_notes').val(data.notes || '');
 
-                        // تعبئة الـ Select2
                         $('#edit_supplier_id').val(data.supplier_id).trigger('change');
                         $('#edit_warehouse_id').val(data.warehouse_id).trigger('change');
                         $('#edit_product_id').val(data.product_id).trigger('change');
 
-                        // ✅ عرض صورة إذن المورد إذا وجدت
+                        // ✅ عرض تاريخ الانتهاء
+                        $('#edit_expiry_date_display').val(data.expiry_date || '');
+
                         if (data.supplier_receipt_url) {
                             $('#currentReceiptPreview').show();
                             $('#currentReceiptName').text('الملف الحالي: ' + data
@@ -1249,7 +1374,6 @@
                             $('#receiptPreviewContainer').hide();
                         }
 
-                        // عرض المودال
                         $('#editReceivingOrderModal').modal('show');
                     },
                     error: function(xhr) {
@@ -1262,6 +1386,7 @@
                     }
                 });
             });
+
             $(window).on('resize', function() {
                 if (table) {
                     clearTimeout(window.resizeTimer);
@@ -1347,68 +1472,6 @@
         });
 
         // ==========================================
-        // تعديل شحنة
-        // ==========================================
-        $(document).on('click', '.edit-receiving-order', function() {
-            let id = $(this).data('id');
-            Swal.fire({
-                title: 'جاري التحميل...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-
-            $.ajax({
-                url: "{{ url('admin/receiving_orders') }}/" + id + "/edit",
-                method: 'GET',
-                success: function(data) {
-                    Swal.close();
-
-                    // تعبئة البيانات الأساسية
-                    $('#edit_id').val(data.id);
-                    $('#edit_document_number').val(data.document_number);
-                    $('#edit_batch_number').val(data.batch_number || '');
-                    $('#edit_production_date').val(data.production_date || '');
-                    $('#edit_quantity').val(data.quantity);
-                    $('#edit_samples_quantity').val(data.samples_quantity || 0);
-                    $('#edit_arrival_time').val(data.arrival_time ? moment(data.arrival_time).format(
-                        'YYYY-MM-DDTHH:mm') : '');
-                    $('#edit_departure_time').val(data.departure_time ? moment(data.departure_time)
-                        .format('YYYY-MM-DDTHH:mm') : '');
-                    $('#edit_notes').val(data.notes || '');
-
-                    // تعبئة الـ Select2
-                    $('#edit_supplier_id').val(data.supplier_id).trigger('change');
-                    $('#edit_warehouse_id').val(data.warehouse_id).trigger('change');
-                    $('#edit_product_id').val(data.product_id).trigger('change');
-
-                    // ✅ عرض صورة إذن المورد إذا وجدت
-                    if (data.supplier_receipt_url) {
-                        $('#currentReceiptPreview').show();
-                        $('#currentReceiptName').text('الملف الحالي: ' + data.supplier_receipt.split(
-                            '/').pop());
-                        $('#receiptPreviewContainer').show();
-                        $('#receiptPreviewImg').attr('src', data.supplier_receipt_url);
-                        $('#receiptPreviewLink').attr('href', data.supplier_receipt_url);
-                    } else {
-                        $('#currentReceiptPreview').hide();
-                        $('#receiptPreviewContainer').hide();
-                    }
-
-                    // عرض المودال
-                    $('#editReceivingOrderModal').modal('show');
-                },
-                error: function(xhr) {
-                    Swal.close();
-                    let errorMsg = 'تعذر جلب البيانات';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
-                    }
-                    Swal.fire('خطأ!', errorMsg, 'error');
-                }
-            });
-        });
-
-        // ==========================================
         // تحديث شحنة
         // ==========================================
         $('#btnUpdateReceivingOrder').click(function() {
@@ -1450,7 +1513,6 @@
                 }
             });
         });
-
 
         // ==========================================
         // دالة حساب تاريخ الانتهاء (AJAX)
@@ -1497,9 +1559,6 @@
                 }
             );
         });
-
-        // داخل success الخاص بـ edit-receiving-order (بعد تعبئة البيانات)
-        $('#edit_expiry_date_display').val(data.expiry_date || '');
 
         // ==========================================
         // حذف صورة إذن المورد
@@ -1602,7 +1661,6 @@
         $(document).on('click', '.view-report-copy', function() {
             var data = table.row($(this).parents('tr')).data();
 
-            // ✅ دالة تنسيق التاريخ والوقت بالعربية
             function formatDateTime(dateTime) {
                 if (!dateTime) return '-';
                 try {
@@ -1615,10 +1673,8 @@
                     var hours = date.getHours();
                     var minutes = String(date.getMinutes()).padStart(2, '0');
 
-                    // ✅ تحديد صباحاً أو مساءً بالعربية
                     var period = hours >= 12 ? 'مساءً' : 'صباحاً';
 
-                    // ✅ تحويل الساعة إلى نظام 12 ساعة
                     var hours12 = hours % 12;
                     hours12 = hours12 === 0 ? 12 : hours12;
 
@@ -1631,17 +1687,14 @@
             var arrivalTime = formatDateTime(data.arrival_time);
             var departureTime = formatDateTime(data.departure_time);
 
-            // ✅ بناء التقرير
             var report = `1- رقم الإذن الورقي: ${data.document_number}
 2- مكان الوصول: ${data.warehouse_name}
 3- ساعة وصول العربة: ${arrivalTime}
 4- تم استلام عدد (${data.quantity}) كرتونة بسكويت نوع (${data.product_name}) وارد من مصنع (${data.supplier_name})
 5- ساعة مغادرة العربة: ${departureTime}`;
 
-            // ✅ إضافة الملاحظات
             report += `\n6- ملاحظات: ${(data.notes && data.notes.trim() !== '') ? data.notes : 'لا يوجد'}`;
 
-            // ✅ إضافة العينات فقط إذا كانت أكبر من 0
             if (data.samples_quantity && parseInt(data.samples_quantity) > 0) {
                 report += `\nتم استلام عدد ${data.samples_quantity} عينة`;
             }

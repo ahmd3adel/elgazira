@@ -62,6 +62,8 @@ Route::get(
 )->name('receiving-orders.inspection');
 Route::get('receiving_orders/calculate-expiry', [ReceivingOrderController::class, 'calculateExpiry'])
     ->name('receiving_orders.calculate-expiry');
+    Route::delete('receiving_orders/{id}/remove-damaged-barcode', [ReceivingOrderController::class, 'removeDamagedBarcode'])
+    ->name('receiving_orders.remove-damaged-barcode');
 // ========== Department Allocations ==========
 // ✅ routes مخصصة BEFORE resource لتجنب التعارض
 Route::get('department_allocations/{id}/edit-data', [DepartmentAllocationController::class, 'editData'])
