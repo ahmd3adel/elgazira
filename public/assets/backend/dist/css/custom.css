@@ -1,0 +1,546 @@
+*{
+    direction: rtl !important;
+}
+body, h1, h2, h3, h4, h5, h6, .main-sidebar, .nav-link, .btn {
+    font-family: 'Cairo', sans-serif !important;
+}
+.layout-fixed .main-sidebar {
+    right: 0;
+}
+.brand-image {
+    float: right;
+}
+.content-wrapper, .main-footer, .main-header {
+    margin-left: 0px;
+    margin-right: 250px;
+}
+.mr-auto-navbav{
+    margin-right: auto!important;
+}
+.navbar-expand .navbar-nav .nav-link {
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+[class*=icheck-]>input:first-child:checked+input[type=hidden]+label::after, 
+[class*=icheck-]>input:first-child:checked+label::after {
+    right: 15px;
+    left: auto;
+}
+.nav-sidebar .nav-link>.right, 
+.nav-sidebar .nav-link>p>.right {
+    left: 1rem;
+    right: auto;
+}
+.nav-sidebar .nav-link>.right:nth-child(2), 
+.nav-sidebar .nav-link>p>.right:nth-child(2) {
+    left: 2.2rem;
+    right: auto;
+}
+.small-box .icon>i {
+    left: 15px;
+    right: auto;
+}
+@media (min-width: 992px){
+    .sidebar-mini.sidebar-collapse .content-wrapper, .sidebar-mini.sidebar-collapse .main-footer, .sidebar-mini.sidebar-collapse .main-header {
+        margin-right: 4.6rem!important;
+    }
+    .sidebar-mini.sidebar-collapse .content-wrapper, .sidebar-mini.sidebar-collapse .main-footer, .sidebar-mini.sidebar-collapse .main-header {
+        margin-right: 4.6rem!important;
+        margin-left: 0!important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .main-sidebar, .main-sidebar::before {
+        box-shadow: none !important;
+        margin-right: -250px;
+    }
+
+    .content-wrapper, .content-wrapper::before, .main-footer, .main-footer::before, .main-header, .main-header::before {
+        margin-right: 0;
+    }
+
+    .sidebar-open .main-sidebar, .sidebar-open .main-sidebar::before {
+        margin-right: 0;
+    }
+}
+
+/* ========== تحسين الجدول للشاشات الصغيرة ========== */
+
+/* حاوية الجدول */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+}
+
+/* الجدول نفسه */
+#professionsTable {
+    width: 100% !important;
+    min-width: 800px; /* عرض أدنى للجدول لضمان ظهور جميع الأعمدة */
+}
+
+/* تحسين خلايا الجدول */
+#professionsTable th,
+#professionsTable td {
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 8px;
+}
+
+/* عمود اسم المهنة - يسمح بالتفاف النص */
+#professionsTable td:nth-child(3) {
+    white-space: normal;
+    min-width: 180px;
+    max-width: 250px;
+    text-align: right;
+}
+
+/* عمود الأيقونة */
+#professionsTable td:nth-child(2) {
+    min-width: 60px;
+}
+
+/* عمود العمليات */
+#professionsTable td:last-child,
+#professionsTable th:last-child {
+    min-width: 100px;
+}
+
+/* ========== RESPONSIVE ========== */
+
+/* للشاشات المتوسطة (تابلت) */
+@media (max-width: 991px) {
+    #professionsTable {
+        min-width: 750px;
+    }
+    
+    #professionsTable td:nth-child(3) {
+        min-width: 150px;
+        max-width: 200px;
+    }
+    
+    .icon-circle {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+}
+
+/* للشاشات الصغيرة (موبايل) */
+@media (max-width: 767px) {
+    .table-responsive-wrapper {
+        margin: 0 -15px; /* تعويض padding الأب */
+        width: calc(100% + 30px);
+    }
+    
+    #professionsTable {
+        min-width: 650px;
+        font-size: 13px;
+    }
+    
+    #professionsTable th,
+    #professionsTable td {
+        padding: 8px 5px;
+    }
+    
+    #professionsTable td:nth-child(3) {
+        min-width: 130px;
+        max-width: 180px;
+        font-size: 12px;
+    }
+    
+    .icon-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85rem;
+    }
+    
+    .badge-status {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+    
+    .btn-action {
+        padding: 3px 6px;
+        font-size: 11px;
+    }
+    
+    /* تحسين أزرار العمليات */
+    .btn-group .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* للشاشات الصغيرة جداً */
+@media (max-width: 480px) {
+    #professionsTable {
+        min-width: 550px;
+        font-size: 11px;
+    }
+    
+    #professionsTable th,
+    #professionsTable td {
+        padding: 6px 3px;
+    }
+    
+    #professionsTable td:nth-child(3) {
+        min-width: 110px;
+        max-width: 150px;
+        font-size: 11px;
+    }
+    
+    .icon-circle {
+        width: 25px;
+        height: 25px;
+        font-size: 0.75rem;
+    }
+}
+
+/* ========== تحسين DataTables Controls ========== */
+
+/* جعل عناصر التحكم مرنة */
+@media (max-width: 767px) {
+    .dataTables_wrapper .row {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .dataTables_wrapper .col-sm-12.col-md-6 {
+        width: 100%;
+        text-align: center !important;
+    }
+    
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        text-align: center !important;
+        margin-bottom: 15px;
+    }
+    
+    .dataTables_wrapper .dataTables_filter input {
+        width: 90%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+    
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: center !important;
+        margin-top: 15px;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .page-item {
+        margin: 2px;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .page-link {
+        padding: 0.25rem 0.5rem;
+        font-size: 12px;
+    }
+}
+
+/* ========== Card Responsive ========== */
+@media (max-width: 767px) {
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .card-header .card-title {
+        margin-bottom: 10px;
+    }
+    
+    .card-header .card-tools {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    
+    .card-header .btn-group {
+        flex: 1;
+    }
+    
+    .card-header .btn-group .dropdown-toggle {
+        width: 100%;
+    }
+    
+    .card-header .btn-success {
+        flex: 1;
+    }
+}
+
+/* ========== حل السكرول الأفقي للجداول ========== */
+
+/* الحاوية الرئيسية للجدول */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+/* إظهار شريط التمرير دائماً على الموبايل */
+.table-responsive-wrapper::-webkit-scrollbar {
+    height: 8px;
+    background-color: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* الجدول نفسه - عرض ثابت لضمان السكرول */
+#professionsTable {
+    width: 100% !important;
+    min-width: 900px; /* هذا يضمن ظهور جميع الأعمدة مع سكرول */
+    margin-bottom: 0;
+    border-collapse: collapse;
+}
+
+/* تأكيد أن الجدول لا ينضغط */
+#professionsTable,
+#professionsTable > tbody,
+#professionsTable > thead {
+    width: 100%;
+    min-width: 900px;
+}
+
+/* تثبيت عرض الأعمدة */
+#professionsTable th,
+#professionsTable td {
+    white-space: nowrap; /* منع التفاف النص */
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 10px;
+}
+
+/* استثناء عمود اسم المهنة - يمكن أن يكون أوسع */
+#professionsTable td:nth-child(3),
+#professionsTable th:nth-child(3) {
+    min-width: 200px;
+    max-width: 300px;
+    white-space: normal; /* السماح بالتفاف لاسم المهنة فقط */
+    text-align: right;
+}
+
+/* عرض ثابت للأعمدة الأخرى */
+#professionsTable th:first-child,
+#professionsTable td:first-child {
+    min-width: 60px; /* عمود الرقم */
+}
+
+#professionsTable th:nth-child(2),
+#professionsTable td:nth-child(2) {
+    min-width: 70px; /* عمود الأيقونة */
+}
+
+#professionsTable th:nth-child(4),
+#professionsTable td:nth-child(4) {
+    min-width: 120px; /* عمود عدد التخصصات */
+}
+
+#professionsTable th:nth-child(5),
+#professionsTable td:nth-child(5) {
+    min-width: 90px; /* عمود الحالة */
+}
+
+#professionsTable th:nth-child(6),
+#professionsTable td:nth-child(6) {
+    min-width: 110px; /* عمود التاريخ */
+}
+
+#professionsTable th:last-child,
+#professionsTable td:last-child {
+    min-width: 120px; /* عمود العمليات */
+}
+
+/* ========== Responsive للشاشات المختلفة ========== */
+
+/* شاشات كبيرة (أقل من 1200px) */
+@media (max-width: 1199px) {
+    #professionsTable {
+        min-width: 850px;
+    }
+}
+
+/* شاشات متوسطة (تابلت) */
+@media (max-width: 991px) {
+    .table-responsive-wrapper {
+        margin: 0 -15px;
+        width: calc(100% + 30px);
+        padding: 0 15px;
+    }
+    
+    #professionsTable {
+        min-width: 800px;
+    }
+    
+    #professionsTable th,
+    #professionsTable td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+    
+    #professionsTable td:nth-child(3),
+    #professionsTable th:nth-child(3) {
+        min-width: 180px;
+    }
+}
+
+/* شاشات صغيرة (موبايل) */
+@media (max-width: 767px) {
+    .table-responsive-wrapper {
+        margin: 0 -20px;
+        width: calc(100% + 40px);
+        padding: 0 20px;
+    }
+    
+    #professionsTable {
+        min-width: 750px;
+    }
+    
+    #professionsTable th,
+    #professionsTable td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+    
+    #professionsTable td:nth-child(3),
+    #professionsTable th:nth-child(3) {
+        min-width: 160px;
+    }
+    
+    /* تحسين الأيقونة على الموبايل */
+    .icon-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+    
+    /* تحسين الأزرار */
+    .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.7rem;
+    }
+    
+    /* تحسين شارات الحالة */
+    .badge-status {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+}
+
+/* شاشات صغيرة جداً */
+@media (max-width: 480px) {
+    #professionsTable {
+        min-width: 650px;
+    }
+    
+    #professionsTable th,
+    #professionsTable td {
+        padding: 6px 4px;
+        font-size: 11px;
+    }
+    
+    #professionsTable td:nth-child(3),
+    #professionsTable th:nth-child(3) {
+        min-width: 140px;
+    }
+    
+    .icon-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ========== تحسين DataTables Controls ========== */
+
+/* جعل عناصر التحكم تظهر بشكل جيد */
+@media (max-width: 767px) {
+    .dataTables_wrapper .row {
+        flex-direction: column;
+    }
+    
+    .dataTables_wrapper .col-sm-12.col-md-6 {
+        width: 100%;
+        text-align: center !important;
+    }
+    
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        text-align: center !important;
+        margin-bottom: 15px;
+    }
+    
+    .dataTables_wrapper .dataTables_filter input {
+        width: 90%;
+        max-width: 280px;
+        display: inline-block;
+    }
+    
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: center !important;
+        margin-top: 15px;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .page-item {
+        margin: 2px;
+    }
+}
+
+/* ========== إضافة تلميح للسكرول ========== */
+.scroll-hint {
+    text-align: center;
+    padding: 8px;
+    background: linear-gradient(90deg, #f8f9fa, #e9ecef);
+    color: #0066cc;
+    font-size: 12px;
+    border-radius: 20px;
+    margin-top: 10px;
+    display: inline-block;
+    width: auto;
+    animation: fadeInOut 3s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    20% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); display: none; }
+}
+
+.scroll-hint i {
+    margin-left: 5px;
+    margin-right: 5px;
+}

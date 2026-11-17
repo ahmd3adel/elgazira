@@ -1,0 +1,78 @@
+# ============================================
+# Laravel
+# ============================================
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/public/storage
+/public/css/filament
+/public/js/filament
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+/storage/logs/*
+/bootstrap/cache/*.php
+!.gitkeep
+
+# ============================================
+# Environment
+# ============================================
+.env
+.env.*
+!.env.example
+
+# ============================================
+# IDE / Editor
+# ============================================
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ============================================
+# OS
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Logs & Cache
+# ============================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================
+# Build artifacts
+# ============================================
+*.zip
+*.rar
+*.tar
+*.tar.gz
+
+# ============================================
+# Composer / NPM
+# ============================================
+/composer.phar
+/.phpunit.result.cache
+.phpunit.cache/
+
+# ============================================
+# Uploads (لو مش عايز ترفع صور المستخدمين)
+# ============================================
+# /storage/app/public/receipts/
+
+# ============================================
+# SQL Dumps (لو مش عايز ترفعها)
+# ============================================
+# /lumisai.sql
+# /daleelmasr.sql
+# /db/*.sql

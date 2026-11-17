@@ -1,0 +1,139 @@
+<?php
+
+use App\Http\Controllers\DistributionOrderController;
+use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DepartmentAllocationController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\Frontend\DashboardController;
+use App\Http\Controllers\GovernorateController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReceivingOrderController;
+use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\DriverController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EmployeeController; // 👈 1. استدعاء كونترولر العاملين هنا
+use App\Http\Controllers\InventoryTransactionController;
+use App\Http\Controllers\StockBalanceController;
+use App\Http\Controllers\MilkAllocationController;
+use App\Http\Controllers\SampleController;
+use App\Http\Controllers\DamagedBarcodeController; // 👈 2. استدعاء كونترولر الباركود التالف هنا
+
+
+// ---------------------------------------------------------
+// 1. روابط الواجهة الأمامية (Frontend / Public)
+// ---------------------------------------------------------
+// Route::get('/', [DashboardController::class, 'index'])->name('home');
+
+// ---------------------------------------------------------
+// 2. روابط المستخدم المسجل (User Dashboard / Auth)
+// ---------------------------------------------------------
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+});
+
+// ---------------------------------------------------------
+// 3. روابط لوحة التحكم (Admin Panel / Backend)
+// ---------------------------------------------------------
+Route::prefix('admin')->name('admin.')->group(function() {
+    
+    Route::resource('categories', CategoryController::class);
+    Route::resource('governorates', GovernorateController::class);
+    
+    // ✅ مهم: ضع routes المحذوفات BEFORE resource warehouses
+    Route::get('warehouses/trashed', [WarehouseController::class, 'trashed'])->name('warehouses.trashed');
+    Route::post('warehouses/restore', [WarehouseController::class, 'restore'])->name('warehouses.restore');
+    Route::delete('warehouses/force-delete', [WarehouseController::class, 'forceDelete'])->name('warehouses.force-delete');
+    
+    // ✅ ثم ضع resource warehouses بعدها
+    Route::resource('warehouses', WarehouseController::class);
+    
+    Route::resource('suppliers', SupplierController::class);
+    Route::resource('products', ProductController::class);
+    Route::resource('departments', DepartmentController::class);
+    Route::resource('inventories', InventoryController::class);
+    Route::resource('receiving_orders', ReceivingOrderController::class);
+
+Route::get(
+    'receiving-orders/{id}/inspection',
+    [ReceivingOrderController::class, 'inspection']
+)->name('receiving-orders.inspection');
+Route::get('receiving_orders/calculate-expiry', [ReceivingOrderController::class, 'calculateExpiry'])
+    ->name('receiving_orders.calculate-expiry');
+    Route::delete('receiving_orders/{id}/remove-damaged-barcode', [ReceivingOrderController::class, 'removeDamagedBarcode'])
+    ->name('receiving_orders.remove-damaged-barcode');
+// ========== Department Allocations ==========
+// ✅ routes مخصصة BEFORE resource لتجنب التعارض
+Route::get('department_allocations/{id}/edit-data', [DepartmentAllocationController::class, 'editData'])
+    ->name('department_allocations.editData');
+
+Route::put('department_allocations/{id}/update-allocation', [DepartmentAllocationController::class, 'updateAllocation'])
+    ->name('department_allocations.updateAllocation');
+
+Route::post('department_allocations/{id}/refund', [DepartmentAllocationController::class, 'refund'])
+    ->name('department_allocations.refund');
+
+// ✅ ثم الـ resource
+Route::resource('department_allocations', DepartmentAllocationController::class);    
+    // المدارس
+    Route::resource('schools', SchoolController::class);
+    Route::get('schools/by-department', [SchoolController::class, 'getByDepartment'])->name('schools.by_department');
+Route::get('transfers/check-stock', [StockTransferController::class, 'checkStock'])
+    ->name('transfers.check-stock');
+    // المنصرف اليومي للمدارس
+    Route::resource('distribution_orders', DistributionOrderController::class);
+    Route::get('all_distribution_orders', [InventoryController::class, 'all_warehouses'])->name('all_warehouses');
+
+    Route::get('/get-schools-by-department', [DistributionOrderController::class, 'getSchoolsByDepartment'])
+        ->name('getSchoolsByDepartment');
+
+    Route::resource('transfers', StockTransferController::class);
+
+    // الأجهزة
+    Route::resource('devices', DeviceController::class);
+    Route::patch('devices/{id}/update-technical-status', [DeviceController::class, 'updateTechnicalStatus'])
+        ->name('devices.update-technical-status');
+    Route::get('devices/{id}/maintenance', [DeviceController::class, 'getMaintenanceDetails'])
+        ->name('devices.maintenance-details');
+    
+    // المناديب
+    Route::resource('drivers', DriverController::class);
+
+        Route::resource('employees', EmployeeController::class);
+
+        Route::resource('inventory_transactions', InventoryTransactionController::class);
+        // routes/web.php
+Route::get('inventory_transactions/{id}/json', [InventoryTransactionController::class, 'showJson'])
+    ->name('inventory_transactions.showJson');
+
+    Route::get('stock_balances', [StockBalanceController::class, 'index'])
+        ->name('stock_balances.index');
+    
+    Route::get('stock_balances/{productId}/{warehouseId}/details', [StockBalanceController::class, 'details'])
+        ->name('stock_balances.details');
+Route::get('department-allocations/{department}/orders', 
+    [DepartmentAllocationController::class, 'departmentOrders'])
+    ->name('admin.department_allocations.departmentOrders');
+        Route::get('samples', [SampleController::class, 'index'])->name('samples.index');
+Route::get('samples/export', [SampleController::class, 'export'])
+    ->name('admin.samples.export');
+
+      Route::prefix('damaged-barcodes')->name('damaged-barcodes.')->group(function () {
+        Route::get('/',              [DamagedBarcodeController::class, 'index'])->name('index');
+        Route::post('/{id}/status',  [DamagedBarcodeController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{id}/notes',   [DamagedBarcodeController::class, 'updateNotes'])->name('update-notes');
+        Route::get('/export',        [DamagedBarcodeController::class, 'export'])->name('export');
+    });
+// ========== Milk Allocations ==========
+Route::prefix('milk_allocations')->name('milk_allocations.')->group(function () {
+    Route::get('/', [MilkAllocationController::class, 'index'])->name('index');
+    Route::post('/', [MilkAllocationController::class, 'store'])->name('store');
+    Route::get('{id}/edit-data', [MilkAllocationController::class, 'editData'])->name('editData');
+    Route::put('{id}', [MilkAllocationController::class, 'update'])->name('update');
+    Route::delete('{id}', [MilkAllocationController::class, 'destroy'])->name('destroy');
+});
+});
